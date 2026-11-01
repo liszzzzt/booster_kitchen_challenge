@@ -1,7 +1,7 @@
 import threading
 from booster_agent_framework import AgentBase, AgentFeatures
-from locomotion.control import LocomotionController
-from robot.t2 import T2Robot
+from .locomotion.control import LocomotionController
+from .robot.t2 import T2Robot
 
 
 class T2KitchenChallengeAgent(AgentBase):
