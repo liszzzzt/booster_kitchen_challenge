@@ -11,6 +11,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libgl1 libglib2.0-0 python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
+RUN python3 -m venv --system-site-packages /opt/t2ws-venv \
+    && /opt/t2ws-venv/bin/python -m pip install --upgrade \
+        pip wheel "setuptools>=68,<80"
+
+ENV PATH="/opt/t2ws-venv/bin:${PATH}"
+
 # boosteros pulls in booster-robotics-sdk-python (cp310 wheel), numpy<2, opencv, scipy, ...
 # RUN pip3 install --no-cache-dir boosteros onnxruntime onnx matplotlib
 
