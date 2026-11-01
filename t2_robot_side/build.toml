@@ -6,4 +6,4 @@ pip_repos = ["https://pypi.org/simple"]
 obfuscation = false
 
 [python.dependencies]
-common = []
+common = ["boosteros"]
