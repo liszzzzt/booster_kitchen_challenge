@@ -27,5 +27,7 @@ ENV FASTRTPS_DEFAULT_PROFILES_FILE=/opt/booster/fastdds_profiles.xml
 COPY docker/ros_env.sh /etc/ros_env.sh
 RUN echo '. /etc/ros_env.sh' >> /etc/bash.bashrc
 COPY docker/entrypoint.sh /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh /etc/ros_env.sh \
+    && chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["bash"]
