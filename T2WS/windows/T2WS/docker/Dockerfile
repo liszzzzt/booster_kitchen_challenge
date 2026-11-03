@@ -1,5 +1,5 @@
-# ROS 2 Kilted development environment for communicating with Booster Studio
-# simulator container (virtual-robot). Build context is the repo root.
+# ROS 2 Kilted development environment for communicating with a Booster Studio
+# virtual-robot container on Windows Docker Desktop. Build context is this T2WS directory.
 FROM osrf/ros:kilted-desktop
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -17,7 +17,7 @@ RUN python3 -m venv --system-site-packages /opt/t2ws-venv \
 
 ENV PATH="/opt/t2ws-venv/bin:${PATH}"
 
-# boosteros pulls in booster-robotics-sdk-python (cp310 wheel), numpy<2, opencv, scipy, ...
+# Install optional application dependencies in /opt/t2ws-venv when they are needed.
 # RUN pip3 install --no-cache-dir boosteros onnxruntime onnx matplotlib
 
 # Booster's ROS 2 interface (msgs/srvs). Only the interface package is built:

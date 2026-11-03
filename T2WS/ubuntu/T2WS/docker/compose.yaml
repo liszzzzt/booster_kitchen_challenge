@@ -1,0 +1,31 @@
+# One long-lived container:  docker compose up -d --build   then   docker compose exec t2ws bash
+# Requires the Booster Studio sim container to be running first.
+name: t2ws
+services:
+  t2ws:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: t2ws:kilted
+    container_name: t2ws-dev
+    # Join the sim container's network namespace. The sim's DDS participants only listen on its
+    # own 127.0.0.1 (its Fast DDS profile whitelists loopback), so a
+    # separate container on host or bridge networking cannot reach them. Sharing the namespace
+    # makes that loopback ours too. Override with SIM_CONTAINER=<name> if the sim is renamed.
+    # If the sim container is recreated, recreate this one too (docker compose up -d --force-recreate).
+    network_mode: "container:${SIM_CONTAINER:?Set SIM_CONTAINER first}"
+    volumes:
+      - ../../../..:/ws
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    working_dir: /ws
+    environment:
+      ROS_DOMAIN_ID: "0"
+      DISPLAY: "${DISPLAY:?Set DISPLAY before starting T2WS}"
+      QT_X11_NO_MITSHM: "1"
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      # read from the mount so profile edits only need a restart, not a rebuild
+      FASTRTPS_DEFAULT_PROFILES_FILE: /ws/T2WS/ubuntu/T2WS/docker/fastdds_profiles.xml
+      FASTDDS_DEFAULT_PROFILES_FILE: /ws/T2WS/ubuntu/T2WS/docker/fastdds_profiles.xml
+    command: sleep infinity
+    tty: true
+    stdin_open: true
