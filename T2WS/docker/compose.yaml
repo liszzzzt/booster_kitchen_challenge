@@ -19,6 +19,9 @@ services:
     working_dir: /ws
     environment:
       ROS_DOMAIN_ID: "0"
+      DISPLAY: "host.docker.internal:0.0"
+      QT_X11_NO_MITSHM: "1"
+      LIBGL_ALWAYS_SOFTWARE: "1"
       # read from the mount so profile edits only need a restart, not a rebuild
       FASTRTPS_DEFAULT_PROFILES_FILE: /ws/T2WS/docker/fastdds_profiles.xml
       FASTDDS_DEFAULT_PROFILES_FILE: /ws/T2WS/docker/fastdds_profiles.xml
