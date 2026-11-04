@@ -29,7 +29,6 @@ class T2RobotNode(Node):
         publisher.publish(msg)
 
     def locomotion_command_callback(self, msg):
-        print(f"Locomotion command received: {msg.data}", flush=True)
         command_id = None
         try:
             command = json.loads(msg.data)
@@ -61,7 +60,6 @@ class T2RobotNode(Node):
 
 
     def manipulation_command_callback(self, msg):
-        print(f"Manipulation command received: {msg.data}", flush=True)
         command_id = None
         try:
             command = json.loads(msg.data)
