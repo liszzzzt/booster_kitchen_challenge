@@ -1,17 +1,37 @@
+import rclpy
 import threading
 from booster_agent_framework import AgentBase, AgentFeatures
-from .locomotion.control import LocomotionController
+from rclpy.executors import SingleThreadedExecutor
+
+from .ros.node import T2RobotNode
 from .robot.t2 import T2Robot
 
 
-class T2KitchenChallengeAgent(AgentBase):
+class T2KitchenAgent(AgentBase):
     def __init__(self):
         super().__init__(AgentFeatures())
 
-        self.t2 = T2Robot()
-        self.locomotion = LocomotionController(self.t2)
+        rclpy.init()
 
-        threading.Thread(
-            target=self.locomotion.test_walk,
+        self.t2 = T2Robot()
+        self.robot_node = T2RobotNode(self.t2)
+        self.executor = SingleThreadedExecutor()
+        self.executor.add_node(self.robot_node)
+        self.executor_thread = threading.Thread(
+            target=self.executor.spin,
             daemon=True,
-        ).start()
+        )
+        self.executor_started = False
+
+    def on_agent_activated(self):
+        if not self.executor_started:
+            self.executor_thread.start()
+            self.executor_started = True
+        self.t2.launch()
+
+    def on_agent_close(self):
+        self.executor.shutdown()
+        if self.executor_started:
+            self.executor_thread.join()
+        self.robot_node.destroy_node()
+        rclpy.try_shutdown()

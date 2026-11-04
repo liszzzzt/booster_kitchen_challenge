@@ -3,7 +3,7 @@ version = "0.1.0"
 name = { en = "T2 Kitchen Challenge", zh = "T2 厨房挑战" }
 logo = "res/logo.png"
 description = "Robot-side controller for the kitchen challenge"
-entry = "src/main.py:T2KitchenChallengeAgent"
+entry = "src/main.py:T2KitchenAgent"
 debuggable = true
 
 [requirements]
