@@ -1,3 +1,4 @@
+impott time
 import threading
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
@@ -20,6 +21,9 @@ def main():
 
     center_control = CenterControl(server_node)
     remote_control = RemoteControl(server_node)
+
+    time.sleep(3)
+    print("Server is ready.")
 
     try:
         center_control.execute_schedule()
