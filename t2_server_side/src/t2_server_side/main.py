@@ -22,7 +22,7 @@ def main():
     center_control = CenterControl(server_node)
     remote_control = RemoteControl(server_node)
 
-    time.sleep(3)
+    time.sleep(2)
     print("Server is ready.")
 
     try:
