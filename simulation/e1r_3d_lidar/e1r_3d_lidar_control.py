@@ -132,6 +132,7 @@ class E1R3DLidarControl:
             self._trunk_id,
             self._geom_ids,
             self._distances,
+            None,
             self._ray_count,
             self.RANGE_MAX,
         )
