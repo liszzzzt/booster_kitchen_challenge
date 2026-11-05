@@ -31,14 +31,14 @@ class E1R3DLidarControl:
         self._last_scan_time = None
         self._first_publish = True
 
-        self._site_id = mujoco.mj_name2id(
-            model,
+        self._site_id = self._find_scoped_id(
             mujoco.mjtObj.mjOBJ_SITE,
+            model.nsite,
             "e1r_sensor",
         )
-        self._trunk_id = mujoco.mj_name2id(
-            model,
+        self._trunk_id = self._find_scoped_id(
             mujoco.mjtObj.mjOBJ_BODY,
+            model.nbody,
             "trunk",
         )
         if self._site_id < 0:
@@ -48,6 +48,22 @@ class E1R3DLidarControl:
 
         self._directions = self._make_test_directions()
         self._geom_groups = np.ones(6, dtype=np.uint8)
+
+    def _find_scoped_id(self, object_type, object_count: int, name: str) -> int:
+        object_id = mujoco.mj_name2id(self._model, object_type, name)
+        if object_id >= 0:
+            return object_id
+
+        suffix = f"_{name}"
+        for candidate_id in range(object_count):
+            candidate_name = mujoco.mj_id2name(
+                self._model,
+                object_type,
+                candidate_id,
+            )
+            if candidate_name and candidate_name.endswith(suffix):
+                return candidate_id
+        return -1
 
     @staticmethod
     def _make_test_directions() -> list[np.ndarray]:
