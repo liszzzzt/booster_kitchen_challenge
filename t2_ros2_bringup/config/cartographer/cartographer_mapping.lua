@@ -9,7 +9,7 @@ options = {
   published_frame = "odom",
   odom_frame = "odom",
   provide_odom_frame = false,
-  publish_frame_projected_to_2d = false,
+  publish_frame_projected_to_2d = true,
   use_pose_extrapolator = true,
   use_odometry = true,
   use_nav_sat = false,
@@ -29,15 +29,18 @@ options = {
   landmarks_sampling_ratio = 1.,
 }
 
-MAP_BUILDER.use_trajectory_builder_3d = true
+MAP_BUILDER.use_trajectory_builder_2d = true
 
-TRAJECTORY_BUILDER_3D.min_range = 0.20
-TRAJECTORY_BUILDER_3D.max_range = 15.0
-TRAJECTORY_BUILDER_3D.num_accumulated_range_data = 1
-TRAJECTORY_BUILDER_3D.voxel_filter_size = 0.05
-TRAJECTORY_BUILDER_3D.submaps.high_resolution = 0.10
-TRAJECTORY_BUILDER_3D.submaps.low_resolution = 0.30
-TRAJECTORY_BUILDER_3D.submaps.num_range_data = 90
+TRAJECTORY_BUILDER_2D.use_imu_data = true
+TRAJECTORY_BUILDER_2D.min_range = 0.20
+TRAJECTORY_BUILDER_2D.max_range = 15.0
+TRAJECTORY_BUILDER_2D.min_z = -0.50
+TRAJECTORY_BUILDER_2D.max_z = 0.50
+TRAJECTORY_BUILDER_2D.missing_data_ray_length = 15.0
+TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 1
+TRAJECTORY_BUILDER_2D.voxel_filter_size = 0.05
+TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true
+TRAJECTORY_BUILDER_2D.submaps.num_range_data = 90
 
 POSE_GRAPH.optimize_every_n_nodes = 90
 
