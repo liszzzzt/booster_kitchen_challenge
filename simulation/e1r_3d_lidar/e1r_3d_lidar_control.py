@@ -112,8 +112,7 @@ class E1R3DLidarControl:
 
         points = self._cast_rays()
         header = Header()
-        header.stamp.sec = int(simulation_time)
-        header.stamp.nanosec = int((simulation_time - int(simulation_time)) * 1e9)
+        header.stamp = self._node.get_clock().now().to_msg()
         header.frame_id = "e1r_link"
         self._publisher.publish(point_cloud2.create_cloud_xyz32(header, points))
 
