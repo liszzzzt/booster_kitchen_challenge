@@ -104,6 +104,7 @@ class E1R3DLidarControl:
             elif simulation_time - self._last_scan_time < 1.0 / self.FREQUENCY_HZ:
                 return
         self._last_scan_time = simulation_time
+        scan_stamp = self._node.get_clock().now().to_msg()
 
         self._data.qpos[:] = state.qpos
         self._data.qvel[:] = state.qvel
@@ -112,7 +113,7 @@ class E1R3DLidarControl:
 
         points = self._cast_rays()
         header = Header()
-        header.stamp = self._node.get_clock().now().to_msg()
+        header.stamp = scan_stamp
         header.frame_id = "e1r_link"
         self._publisher.publish(point_cloud2.create_cloud_xyz32(header, points))
 
