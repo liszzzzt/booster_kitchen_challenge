@@ -5,6 +5,7 @@ from rclpy.executors import SingleThreadedExecutor
 
 from .ros.node import T2RobotNode
 from .robot.t2 import T2Robot
+from .plugin_sensors.e1r import E1RMount
 
 
 class T2KitchenAgent(AgentBase):
@@ -15,6 +16,10 @@ class T2KitchenAgent(AgentBase):
 
         self.t2 = T2Robot()
         self.robot_node = T2RobotNode(self.t2)
+
+        # E1R 3d-lidar
+        self.e1r_mount = E1RMount(self.robot_node)
+
         self.executor = SingleThreadedExecutor()
         self.executor.add_node(self.robot_node)
         self.executor_thread = threading.Thread(
@@ -25,9 +30,9 @@ class T2KitchenAgent(AgentBase):
 
     def on_agent_activated(self):
         if not self.executor_started:
+            self.t2.launch(self.robot_node)
             self.executor_thread.start()
             self.executor_started = True
-        self.t2.launch()
 
     def on_agent_close(self):
         self.executor.shutdown()
