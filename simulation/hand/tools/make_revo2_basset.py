@@ -229,7 +229,9 @@ def place_hands_on_wrists(root: ET.Element) -> None:
         hand.set("quat", " ".join(f"{v:.8g}" for v in q))
 
 
-def build(builtin_basset: str, revo2_dir: str, out_path: str, check: bool = False) -> str:
+def build(builtin_basset: str, revo2_dir: str, out_path: str, check: bool = False,
+          replace_builtin: bool = False) -> str:
+    """replace_builtin=True: keep the original robot_t2 manifest (builtin identity) unchanged, only swap the model."""
     with zipfile.ZipFile(builtin_basset) as z:
         manifest = json.loads(z.read("manifest.json"))
         inner = z.read("model.mjspec.zip")
@@ -241,6 +243,8 @@ def build(builtin_basset: str, revo2_dir: str, out_path: str, check: bool = Fals
         names = z.namelist()
         xml_names = [n for n in names if n.endswith(".xml")]
         builtin_xml = z.read(xml_names[0])
+        if b"revo2" in builtin_xml:
+            raise SystemExit("this robot_t2.basset already contains Revo2 hands; use the original (backup) as --builtin")
         t2_meshes = [(n, z.read(n)) for n in names if not n.endswith(".xml")]
 
     revo2_xml = os.path.join(revo2_dir, "T2_31dof_Revo2Hand.xml")
@@ -261,9 +265,12 @@ def build(builtin_basset: str, revo2_dir: str, out_path: str, check: bool = Fals
     model_zip = _write_zip(entries, zipfile.ZIP_STORED)
 
     m = dict(manifest)
-    for k in ("builtin_id", "builtin_revision", "created_at"):
+    if replace_builtin:
+        pass  # identical manifest: id robot_t2, origin builtin, builtin-asset-robot_t2 / 2026.08.2
+    else:
+      for k in ("builtin_id", "builtin_revision", "created_at"):
         m.pop(k, None)
-    m.update({
+      m.update({
         "id": ASSET_ID,
         "name": "T2 Revo2",
         "origin": "user",
@@ -271,7 +278,7 @@ def build(builtin_basset: str, revo2_dir: str, out_path: str, check: bool = Fals
         "author": "robo@home",
         "description": "T2 with two BrainCo Revo2 hands (6 actuated DOF each); needs the revo2_hand physics extension",
         "tags": ["robot", "t2", "humanoid", "revo2", "dexterous_hand"],
-    })
+      })
     m["thumbnail"] = {"path": thumb_path, "mime_type": manifest["thumbnail"]["mime_type"],
                       "sha256": hashlib.sha256(thumb).hexdigest()}
     out = _write_zip([("manifest.json", json.dumps(m, ensure_ascii=False, indent=2).encode()),
@@ -313,8 +320,10 @@ def main():
     ap.add_argument("--revo2", default=os.path.join(t2, "T2_31dof_Revo2Hand"))
     ap.add_argument("--out", default=os.path.join(os.path.dirname(here), "out", f"{ASSET_ID}.basset"))
     ap.add_argument("--check", action="store_true", help="compile with the installed mujoco (use 3.10.0)")
+    ap.add_argument("--replace-builtin", action="store_true",
+                    help="output a drop-in replacement for the builtin robot_t2.basset (same manifest/identity)")
     a = ap.parse_args()
-    build(a.builtin, a.revo2, a.out, a.check)
+    build(a.builtin, a.revo2, a.out, a.check, a.replace_builtin)
 
 
 if __name__ == "__main__":
