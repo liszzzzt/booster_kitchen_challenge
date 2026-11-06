@@ -114,7 +114,7 @@ class E1R3DLidarControl:
         header = Header()
         header.stamp.sec = int(simulation_time)
         header.stamp.nanosec = int((simulation_time - int(simulation_time)) * 1e9)
-        header.frame_id = "trunk"
+        header.frame_id = "e1r_link"
         self._publisher.publish(point_cloud2.create_cloud_xyz32(header, points))
 
     def _cast_rays(self) -> np.ndarray:
@@ -140,13 +140,9 @@ class E1R3DLidarControl:
         valid = (self._distances >= self.RANGE_MIN) & (
             self._distances <= self.RANGE_MAX
         )
-        world_points = origin + (
-            self._distances[valid, None] * world_directions[valid]
-        )
-
-        trunk_position = self._data.xpos[self._trunk_id]
-        trunk_rotation = self._data.xmat[self._trunk_id].reshape(3, 3)
-        return ((world_points - trunk_position) @ trunk_rotation).astype(np.float32)
+        return (
+            self._distances[valid, None] * self._local_directions[valid]
+        ).astype(np.float32)
 
     def on_stop(self) -> None:
         self._node.destroy_node()
