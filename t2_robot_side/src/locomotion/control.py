@@ -6,7 +6,7 @@ from .remote_control import LocomotionRemoteControl
 class LocomotionControl():
     def __init__(self, client):
         self.client = client
-        self.remote_control = LocomotionRemoteControl()
+        self.remote_control = LocomotionRemoteControl(self.client)
 
     def execute(self, msg):
         # {"id": 1, "target": "simpleTable", "frame_id": "map", "coordinate": [2, 1, 0, 0, 0, 1.57]}
@@ -15,18 +15,19 @@ class LocomotionControl():
         command_type = command.get("type", "")
 
         if command_type == "remote":
-            return True
-        if command_type == "posture":
-            return True
-
-        return self.walk_forward()
+            return self.remote_control.execute(command["key"])
+        elif command_type == "posture":
+            # GR3 crouch/stand-pose commands are not implemented for T2.
+            return False
+        else:
+            return self.walk_forward()
 
     def walk_forward(self):
         self.client.set_mode("walk")
 
         try:
             self.client.set_velocity(0.2, 0.0, 0.0)
-            time.sleep(15.0)
+            time.sleep(3.0)
         finally:
             self.client.set_velocity(0.0, 0.0, 0.0)
 
