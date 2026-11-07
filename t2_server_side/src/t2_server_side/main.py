@@ -22,7 +22,9 @@ def main():
     center_control = CenterControl(server_node)
     remote_control = RemoteControl(server_node)
 
-    time.sleep(2)
+    if not server_node.wait_for_robot():
+        print("Robot side is not available.")
+        return
     print("Server is ready.")
 
     try:
