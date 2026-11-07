@@ -13,14 +13,14 @@ class T2Robot:
         self.locomotion_control = LocomotionControl(self.client)
         self.manipulation_control = ManipulationControl(self.client)
 
-    def launch(self, node):
-        self.setup_relay_bridges(node)
+    def launch(self, relay_node):
+        self.setup_relay_bridges(relay_node)
 
-    def setup_relay_bridges(self, node):
-        self.tf_relay = TfRelay(node)
-        self.imu_relay = ImuRelay(node)
-        self.odometry_relay = OdometryRelay(node)
-        self.joint_states_relay = JointStatesRelay(node)
+    def setup_relay_bridges(self, relay_node):
+        self.tf_relay = TfRelay(relay_node)
+        self.imu_relay = ImuRelay(relay_node)
+        self.odometry_relay = OdometryRelay(relay_node)
+        self.joint_states_relay = JointStatesRelay(relay_node)
 
     def locomotion(self, msg):
         return self.locomotion_control.execute(msg)
