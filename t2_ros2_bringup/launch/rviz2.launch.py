@@ -18,11 +18,16 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration("use_sim_time")
     tf_topic = LaunchConfiguration("tf_topic")
+    tf_static_topic = LaunchConfiguration("tf_static_topic")
 
     return LaunchDescription(
         [
             DeclareLaunchArgument("use_sim_time", default_value="false"),
             DeclareLaunchArgument("tf_topic", default_value="/t2/tf"),
+            DeclareLaunchArgument(
+                "tf_static_topic",
+                default_value="/t2/tf_static",
+            ),
             Node(
                 package="rviz2",
                 executable="rviz2",
@@ -30,7 +35,10 @@ def generate_launch_description():
                 output="screen",
                 arguments=["-d", rviz2_config],
                 parameters=[{"use_sim_time": use_sim_time}],
-                remappings=[("/tf", tf_topic)],
+                remappings=[
+                    ("/tf", tf_topic),
+                    ("/tf_static", tf_static_topic),
+                ],
             ),
         ]
     )

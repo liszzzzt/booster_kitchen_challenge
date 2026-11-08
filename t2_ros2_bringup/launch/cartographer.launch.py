@@ -21,10 +21,14 @@ def generate_launch_description():
     imu_topic = LaunchConfiguration("imu_topic")
     odom_topic = LaunchConfiguration("odom_topic")
     tf_topic = LaunchConfiguration("tf_topic")
+    tf_static_topic = LaunchConfiguration("tf_static_topic")
     resolution = LaunchConfiguration("resolution")
     publish_period_sec = LaunchConfiguration("publish_period_sec")
 
-    tf_remapping = [("/tf", tf_topic)]
+    tf_remapping = [
+        ("/tf", tf_topic),
+        ("/tf_static", tf_static_topic),
+    ]
 
     return LaunchDescription(
         [
@@ -46,6 +50,10 @@ def generate_launch_description():
                 default_value="/t2/odom",
             ),
             DeclareLaunchArgument("tf_topic", default_value="/t2/tf"),
+            DeclareLaunchArgument(
+                "tf_static_topic",
+                default_value="/t2/tf_static",
+            ),
             DeclareLaunchArgument("resolution", default_value="0.05"),
             DeclareLaunchArgument("publish_period_sec", default_value="1.0"),
             Node(

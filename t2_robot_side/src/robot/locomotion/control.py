@@ -65,7 +65,7 @@ class LocomotionControl():
 
         try:
             self.client.set_velocity(0.2, 0.0, 0.0)
-            time.sleep(8.0)
+            time.sleep(3.0)
         finally:
             self.client.set_velocity(0.0, 0.0, 0.0)
 
