@@ -4,13 +4,16 @@ import time
 class LocomotionRemoteControl():
     def __init__(self, client):
         self.client = client
-        self.linear_speed = 0.5
-        self.angular_speed = 1.0
+        self.linear_speed = 0.4 # 0.5
+        self.angular_speed = 0.6 # 1
         self.walk_duration = 2.0
         self.head_step = 0.1
 
     def execute(self, key):
         key = key.lower()
+
+        if key == "-":
+            return self.stop()
 
         # walk
         if key in ("w", "s", "a", "d", "q", "e"):
@@ -47,8 +50,11 @@ class LocomotionRemoteControl():
             pitch = max(-0.3, min(0.85, pitch))
             return self.move_head(yaw, pitch)
 
-        # GR3 stand_pose keys have no matching BoosterOS 1.2.2 API.
         return False
+
+    def stop(self):
+        self.client.set_velocity(0.0, 0.0, 0.0)
+        return True
 
     def walk(self, v):
         # T2 set_velocity has no duration argument; finish the pulse here.

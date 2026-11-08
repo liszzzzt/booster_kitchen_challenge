@@ -4,7 +4,8 @@ import rclpy
 from booster_agent_framework import AgentBase, AgentFeatures
 from rclpy.executors import SingleThreadedExecutor
 
-from .plugin_sensors.e1r import E1RMount
+from .sensors.e1r import E1RMount
+from .ros.nav2_node import T2Nav2Node
 from .ros.node import T2RobotNode
 from .robot.relay_bridges.node import T2RelayNode
 from .robot.t2 import T2Robot
@@ -18,6 +19,7 @@ class T2KitchenAgent(AgentBase):
 
         self.t2 = T2Robot()
         self.robot_node = T2RobotNode(self.t2)
+        self.nav2_node = T2Nav2Node(self.t2)
         self.relay_node = T2RelayNode()
 
         # E1R 3d-lidar
@@ -27,6 +29,13 @@ class T2KitchenAgent(AgentBase):
         self.robot_executor.add_node(self.robot_node)
         self.robot_executor_thread = threading.Thread(
             target=self.robot_executor.spin,
+            daemon=True,
+        )
+
+        self.nav2_executor = SingleThreadedExecutor()
+        self.nav2_executor.add_node(self.nav2_node)
+        self.nav2_executor_thread = threading.Thread(
+            target=self.nav2_executor.spin,
             daemon=True,
         )
 
@@ -42,15 +51,20 @@ class T2KitchenAgent(AgentBase):
         if not self.executors_started:
             self.t2.launch(self.relay_node)
             self.relay_executor_thread.start()
+            self.nav2_executor_thread.start()
             self.robot_executor_thread.start()
             self.executors_started = True
 
     def on_agent_close(self):
+        self.t2.stop_nav2()
         self.robot_executor.shutdown()
+        self.nav2_executor.shutdown()
         self.relay_executor.shutdown()
         if self.executors_started:
             self.robot_executor_thread.join()
+            self.nav2_executor_thread.join()
             self.relay_executor_thread.join()
         self.robot_node.destroy_node()
+        self.nav2_node.destroy_node()
         self.relay_node.destroy_node()
         rclpy.try_shutdown()
