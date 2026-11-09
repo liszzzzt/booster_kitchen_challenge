@@ -22,10 +22,12 @@ from .main import inference
 class T2DetectionViewer(Node):
     RGB_WINDOW = "T2 RGB Detection"
     DEPTH_WINDOW = "T2 Depth"
+    STUDIO_TOPIC = "/t2/vision/detection/image_compressed"
 
-    def __init__(self, rgb_topic=None, depth_topic=None):
+    def __init__(self, rgb_topic=None, depth_topic=None, publish_topic=None):
         super().__init__("t2_detection_viewer")
         self.latest_rgb = None
+        self.latest_rgb_header = None
         self.latest_depth = None
         self.frame_number = 0
         self._reported_rgb_error = False
@@ -35,6 +37,12 @@ class T2DetectionViewer(Node):
         self.rgb_topic = None
         self.rgb_subscription = None
         self.depth_subscription = None
+        self.annotated_publisher = (
+            self.create_publisher(CompressedImage, publish_topic, 1)
+            if publish_topic else None
+        )
+        if publish_topic:
+            self.get_logger().info(f"Annotated RGB output: {publish_topic}")
         self._last_wait_log = time.monotonic()
         self.create_timer(1.0, self._discover_topics)
         self._discover_topics()
@@ -111,6 +119,7 @@ class T2DetectionViewer(Node):
                 image.copy() if encoding == "rgb8"
                 else cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             )
+            self.latest_rgb_header = message.header
             self.frame_number += 1
         except (ValueError, cv2.error) as error:
             if not self._reported_rgb_error:
@@ -124,6 +133,7 @@ class T2DetectionViewer(Node):
             if bgr is None:
                 raise ValueError("cannot decode compressed RGB image")
             self.latest_rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+            self.latest_rgb_header = message.header
             self.frame_number += 1
         except (ValueError, cv2.error) as error:
             if not self._reported_rgb_error:
@@ -159,6 +169,19 @@ class T2DetectionViewer(Node):
             if not self._reported_depth_error:
                 self.get_logger().error(str(error))
                 self._reported_depth_error = True
+
+    def publish_annotated(self, bgr):
+        if self.annotated_publisher is None:
+            return
+        ok, encoded = cv2.imencode(".jpg", bgr, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        if not ok:
+            raise RuntimeError("cannot encode annotated RGB image")
+        message = CompressedImage()
+        if self.latest_rgb_header is not None:
+            message.header = self.latest_rgb_header
+        message.format = "jpeg"
+        message.data = encoded.tobytes()
+        self.annotated_publisher.publish(message)
 
 
 def draw_detections(bgr, detections):
@@ -197,6 +220,10 @@ def main():
     parser.add_argument("--model", default=None)
     parser.add_argument("--conf", type=float, default=None)
     parser.add_argument("--device", default=None)
+    parser.add_argument("--studio-only", action="store_true",
+                        help="Publish annotated RGB for Booster Studio without a separate window")
+    parser.add_argument("--publish-topic", default=None,
+                        help="Publish annotated JPEG on a ROS image topic")
     args, ros_args = parser.parse_known_args()
 
     rclpy.init(args=ros_args)
@@ -205,7 +232,11 @@ def main():
     last_frame_number = -1
     inference_failed = False
     try:
-        node = T2DetectionViewer(args.rgb_topic, args.depth_topic)
+        publish_topic = args.publish_topic or (
+            T2DetectionViewer.STUDIO_TOPIC if args.studio_only else None
+        )
+        depth_topic = "" if args.studio_only and args.depth_topic is None else args.depth_topic
+        node = T2DetectionViewer(args.rgb_topic, depth_topic, publish_topic)
         while rclpy.ok():
             rclpy.spin_once(node, timeout_sec=0.02)
             if node.latest_rgb is not None and node.frame_number != last_frame_number:
@@ -223,10 +254,12 @@ def main():
                         node.get_logger().error(
                             f"YOLO disabled: {type(error).__name__}: {error}"
                         )
-                cv2.imshow(node.RGB_WINDOW, bgr)
-                if args.depth_topic != "" and node.latest_depth is not None:
-                    cv2.imshow(node.DEPTH_WINDOW, colorize_depth(node.latest_depth))
-                windows_open = True
+                node.publish_annotated(bgr)
+                if not args.studio_only:
+                    cv2.imshow(node.RGB_WINDOW, bgr)
+                    if args.depth_topic != "" and node.latest_depth is not None:
+                        cv2.imshow(node.DEPTH_WINDOW, colorize_depth(node.latest_depth))
+                    windows_open = True
                 last_frame_number = node.frame_number
             if windows_open:
                 key = cv2.waitKey(1) & 0xFF
