@@ -23,6 +23,17 @@ What it does
           optional "robot": "robot1"  (default: every robot that has Revo2 hands)
       publish    state_topic (default /revo2/hand_state), state_rate_hz (default 20)
           {"robot": "robot1", "side": "right", "closure": {...}, "target": {...}, "time": sim_time}
+      publish    contact_topic (default /revo2/contacts), same rate; per hand, contacts between the hand and
+                 anything that is not the robot itself (forces in N, from mj_contactForce):
+          {"robot", "side", "time", "grip_fn", "friction_ft", "max_util", "max_slip", "sliding",
+           "fingers": {"thumb"|"index"|"middle"|"ring"|"pinky"|"palm": {"fn", "ft", "util", "slip", "n"}},
+           "objects": {"<body>": {"fn", "ft", "mu", "max_util", "max_slip", "n", "net_force": [fx, fy, fz]}}}
+          fn = sum of normal forces, ft = sum of |tangential friction forces|, mu = sliding friction
+          coefficient of the contact pair, util = ft / (mu * fn) of the worst contact,
+          slip = relative tangential speed hand<->object at the contact [m/s] (max over contacts),
+          sliding = any contact with slip > 5 mm/s, net_force = total hand force on that object (world).
+          NOTE: Studio scenes use MuJoCo's pyramidal friction cone; there the solver often puts a contact
+          force on a cone edge, so util = 1.0 also happens while static. Use slip / sliding for slipping.
 If the scene has no Revo2 hands the extension stays idle.
 """
 from __future__ import annotations
@@ -53,6 +64,8 @@ TAU_MAX = np.array([0.5, 1.1, 2.0, 2.0, 2.0, 2.0])   # Nm, Revo2 joint effort (U
 _HAND_RE = re.compile(r"^(?P<robot>robot\d+)_(?P<side>left|right)_revo2_hand$")
 _LOG = "[revo2_hand]"
 SNAP_DISTANCE = 0.03   # m; weld drift above this means the robot was teleported
+FINGER_KEYS = ("thumb", "index", "middle", "ring", "pinky")   # anything else in the hand = "palm"
+SLIP_SPEED = 0.005     # m/s; relative tangential speed above this at a contact = sliding
 
 
 @dataclass(frozen=True)
@@ -60,13 +73,14 @@ class Revo2HandConfig:
     command_topic: str = "/revo2/hand_cmd"
     state_topic: str = "/revo2/hand_state"
     state_rate_hz: float = 20.0
+    contact_topic: str = "/revo2/contacts"
     max_rate: float = 2.0          # closure units per second (full stroke ~0.5 s)
     ros: bool = True
     dds_profile: str = "/opt/booster/BoosterRos2/fastdds_profile.xml"   # same as ros_bridge_server
 
 
 def parse_revo2_hand_config(params: Dict[str, Any]) -> Revo2HandConfig:
-    allowed = {"command_topic", "state_topic", "state_rate_hz", "max_rate", "ros", "dds_profile"}
+    allowed = {"command_topic", "state_topic", "contact_topic", "state_rate_hz", "max_rate", "ros", "dds_profile"}
     unknown = sorted(set(params) - allowed)
     if unknown:
         raise ValueError(f"Unknown revo2_hand param(s): {unknown}")
@@ -74,6 +88,7 @@ def parse_revo2_hand_config(params: Dict[str, Any]) -> Revo2HandConfig:
     cfg = Revo2HandConfig(
         command_topic=str(params.get("command_topic", "/revo2/hand_cmd")),
         state_topic=str(params.get("state_topic", "/revo2/hand_state")),
+        contact_topic=str(params.get("contact_topic", "/revo2/contacts")),
         state_rate_hz=float(params.get("state_rate_hz", 20.0)),
         max_rate=float(params.get("max_rate", 2.0)),
         ros=ros,
@@ -100,6 +115,7 @@ class _Hand:
         self.hand_body = self.wrist_body = self.parent_body = -1
         self.slide_qadr = self.slide_dadr = None   # 3 slide joints (tx, ty, tz)
         self.ball_qadr = self.ball_dadr = -1       # ball joint
+        self.body_key: Dict[int, str] = {}        # hand-subtree body id -> finger key (contact report)
 
     @property
     def complete(self) -> bool:
@@ -117,6 +133,7 @@ class Revo2HandRuntime:
         self._last_state_pub = -1e9
         self._ros_node = None
         self._ros_pub = None
+        self._ros_contact_pub = None
         self._ros_thread: Optional[threading.Thread] = None
         self._ros_executor = None
         self._ros_context = None
@@ -177,6 +194,11 @@ class Revo2HandRuntime:
                 s = String()
                 s.data = json.dumps(msg)
                 self._ros_pub.publish(s)
+            if self._ros_contact_pub is not None:
+                for msg in self.contacts():
+                    s = String()
+                    s.data = json.dumps(msg)
+                    self._ros_contact_pub.publish(s)
         except Exception as exc:  # never break the physics loop
             print(f"{_LOG} state publish failed: {exc}")
 
@@ -194,7 +216,7 @@ class Revo2HandRuntime:
                 rclpy.try_shutdown(context=self._ros_context)
         except Exception:
             pass
-        self._ros_node = self._ros_pub = self._ros_executor = self._ros_context = None
+        self._ros_node = self._ros_pub = self._ros_contact_pub = self._ros_executor = self._ros_context = None
 
     # ---------------------------------------------------------------- public helpers
     def submit(self, command: dict) -> None:
@@ -213,6 +235,79 @@ class Revo2HandRuntime:
                 "closure": {d: round(float(v), 3) for d, v in zip(DOFS, closure)},
                 "target": {d: round(float(v), 3) for d, v in zip(DOFS, h.target)},
             })
+        return out
+
+    def contacts(self) -> List[dict]:
+        """Contact / friction report per hand (see module docstring). Pure read of mjData."""
+        import mujoco
+        m, d = self.model, self.data
+        out = []
+        if m is None or d is None:
+            return out
+        f6 = np.zeros(6)
+        nv = int(m.nv)
+        jp1, jp2 = np.zeros((3, nv)), np.zeros((3, nv))
+        rep = {}
+        for h in self.hands.values():
+            rep[(h.robot, h.side)] = dict(
+                fingers={k: dict(fn=0.0, ft=0.0, util=0.0, slip=0.0, n=0) for k in FINGER_KEYS + ("palm",)},
+                objects={})
+        owner = {}                                   # body id -> (hand key, finger key)
+        for key, h in self.hands.items():
+            for b, fk in h.body_key.items():
+                owner[b] = (key, fk)
+        for i in range(int(d.ncon)):
+            c = d.contact[i]
+            b1, b2 = int(m.geom_bodyid[c.geom1]), int(m.geom_bodyid[c.geom2])
+            for hb, ob, sign in ((b1, b2, 1.0), (b2, b1, -1.0)):
+                if hb not in owner or ob in owner:
+                    continue
+                key, fk = owner[hb]
+                h = self.hands[key]
+                root = int(m.body_rootid[ob])
+                if root == int(m.body_rootid[h.hand_body]) and root != 0:
+                    continue                         # the robot touching itself
+                mujoco.mj_contactForce(m, d, i, f6)
+                fn = float(f6[0])
+                if fn <= 1e-6:
+                    continue
+                ft = float(np.hypot(f6[1], f6[2]))
+                mu = float(c.friction[0])
+                util = ft / (mu * fn) if mu > 0 else 0.0
+                fw = c.frame.reshape(3, 3).T @ f6[:3]   # force geom1 -> geom2, world frame
+                # relative tangential velocity of the two bodies at the contact point
+                mujoco.mj_jac(m, d, jp1, None, c.pos, hb)
+                mujoco.mj_jac(m, d, jp2, None, c.pos, ob)
+                vrel = (jp1 - jp2) @ d.qvel
+                nrm = c.frame[:3]
+                slip = float(np.linalg.norm(vrel - np.dot(vrel, nrm) * nrm))
+                # force ON the other body: +fw if it is geom2 (hand is geom1), else -fw
+                f_on_obj = fw if sign > 0 else -fw
+                r = rep[key]
+                fr = r["fingers"][fk]
+                fr["fn"] += fn; fr["ft"] += ft; fr["n"] += 1; fr["util"] = max(fr["util"], util)
+                fr["slip"] = max(fr["slip"], slip)
+                name = mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_BODY, ob) or f"body{ob}"
+                o = r["objects"].setdefault(name, dict(fn=0.0, ft=0.0, mu=mu, max_util=0.0, max_slip=0.0, n=0,
+                                                       net_force=np.zeros(3)))
+                o["fn"] += fn; o["ft"] += ft; o["n"] += 1; o["max_util"] = max(o["max_util"], util)
+                o["max_slip"] = max(o["max_slip"], slip)
+                o["net_force"] += f_on_obj
+        t = round(float(d.time), 4)
+        for (robot, side), r in rep.items():
+            fingers = {k: {kk: (round(v, 4) if isinstance(v, float) else v) for kk, v in f.items()}
+                       for k, f in r["fingers"].items()}
+            objects = {n: dict(fn=round(o["fn"], 3), ft=round(o["ft"], 3), mu=round(o["mu"], 3),
+                               max_util=round(o["max_util"], 3), max_slip=round(o["max_slip"], 4), n=o["n"],
+                               net_force=[round(float(x), 3) for x in o["net_force"]])
+                       for n, o in r["objects"].items()}
+            mx = max((f["util"] for f in r["fingers"].values()), default=0.0)
+            ms = max((f["slip"] for f in r["fingers"].values() if f["n"]), default=0.0)
+            out.append(dict(robot=robot, side=side, time=t,
+                            grip_fn=round(sum(f["fn"] for f in r["fingers"].values()), 3),
+                            friction_ft=round(sum(f["ft"] for f in r["fingers"].values()), 3),
+                            max_util=round(mx, 3), max_slip=round(ms, 4), sliding=bool(ms > SLIP_SPEED),
+                            fingers=fingers, objects=objects))
         return out
 
     # ---------------------------------------------------------------- internals
@@ -245,6 +340,14 @@ class Revo2HandRuntime:
             if min(j) < 0:
                 continue
             h.hand_body, h.wrist_body, h.parent_body = hb, wb, int(model.body_parentid[hb])
+            h.body_key = {}
+            for b in range(int(model.nbody)):
+                a = b
+                while a > 0 and a != hb:
+                    a = int(model.body_parentid[a])
+                if a == hb:
+                    bn = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, b) or ""
+                    h.body_key[b] = next((k for k in FINGER_KEYS if f"_{k}_" in bn), "palm")
             h.slide_qadr = np.array([model.jnt_qposadr[k] for k in j[:3]])
             h.slide_dadr = np.array([model.jnt_dofadr[k] for k in j[:3]])
             h.ball_qadr, h.ball_dadr = int(model.jnt_qposadr[j[3]]), int(model.jnt_dofadr[j[3]])
@@ -340,12 +443,15 @@ class Revo2HandRuntime:
                             os.environ[k] = v
             node.create_subscription(String, self.cfg.command_topic, self._on_ros_cmd, 10)
             self._ros_pub = node.create_publisher(String, self.cfg.state_topic, 10)
+            if self.cfg.contact_topic:
+                self._ros_contact_pub = node.create_publisher(String, self.cfg.contact_topic, 10)
             ex = SingleThreadedExecutor(context=ctx)
             ex.add_node(node)
             self._ros_node, self._ros_executor, self._ros_context = node, ex, ctx
             self._ros_thread = threading.Thread(target=self._spin, name="revo2_hand_ros", daemon=True)
             self._ros_thread.start()
             print(f"{_LOG} ROS 2: listening on {self.cfg.command_topic}, publishing {self.cfg.state_topic}"
+                  f" + {self.cfg.contact_topic or '(no contact topic)'}"
                   f" (DDS profile: {profile if use_profile else 'default'})")
         except Exception as exc:
             print(f"{_LOG} ROS 2 unavailable ({exc}); hands only respond to Revo2HandRuntime.submit()")
