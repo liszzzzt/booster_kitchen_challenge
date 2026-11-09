@@ -259,6 +259,7 @@ docker restart papt7-t2
 |---|---|---|---|
 | `/revo2/hand_cmd` | 发给插件 | `std_msgs/msg/String`（JSON） | 手指指令 |
 | `/revo2/hand_state` | 插件发布，20 Hz | `std_msgs/msg/String`（JSON） | 每只手一条：`robot`、`side`、`time`、`closure`（实际）、`target`（指令） |
+| `/revo2/contacts` | 插件发布，20 Hz | `std_msgs/msg/String`（JSON） | 每只手一条：手与外物的接触力 / 摩擦力，见下文「接触力与摩擦」 |
 
 Studio 自己的 `/robot1/joint_states` 只有 31 个身体关节，不含手指。
 
@@ -283,6 +284,51 @@ hand = RosRevo2Hand("right")        # Studio
 # hand = make_hand(robot, "right")  # 自动：真机（GetHands 有手）走 SDK ControlDexterousHand，Studio 走话题
 hand.preset("power"); hand.open(); hand.set(index=0.8); print(hand.state())
 ```
+
+## 接触力与摩擦
+
+`/revo2/contacts`（插件 2026-11-09 版；旧容器要重装插件，见第 2 步）每只手一条 JSON，力的单位 N：
+
+```json
+{"robot": "robot1", "side": "right", "time": 12.34,
+ "grip_fn": 30.7, "friction_ft": 13.4, "max_util": 0.29, "max_slip": 0.0004, "sliding": false,
+ "fingers": {"thumb": {"fn": 0.0, "ft": 0.0, "util": 0.0, "slip": 0.0, "n": 0}, "index": {...}, ...,
+             "palm": {"fn": 30.7, "ft": 13.4, "util": 0.29, "slip": 0.0004, "n": 1}},
+ "objects": {"simpleWoodTable": {"fn": 30.7, "ft": 13.4, "mu": 1.5, "max_util": 0.29, "max_slip": 0.0004,
+                                 "n": 1, "net_force": [-1.0, -13.4, -30.7]}}}
+```
+- `fn` 法向力之和，`ft` 切向摩擦力大小之和（`mj_contactForce`）；`mu` 这对接触的滑动摩擦系数（参数值）
+- `util` = ft /(mu·fn)，最差的接触点。**Studio 场景用金字塔摩擦锥，静止时也可能是 1.0，不能当打滑判据**
+- `slip` 接触点处手与物体的相对切向速度（m/s，取最大）；`sliding` = 任一接触 slip > 5 mm/s
+- `net_force` 手对该物体的合力（世界坐标）；只统计手与"不是本机器人"的物体之间的接触
+
+模型摩擦参数（MuJoCo 两个 geom 接触时各分量取较大值，condim 取较大值）：
+
+| 碰撞体 | 滑动 μ | 扭转 | 滚动 | condim |
+|---|---|---|---|---|
+| Revo2 手掌 / 各指节（`tools/make_revo2_basset.py` 设定的估计值，Booster 原模型未给，非实测） | 1.5 | 0.02 | 0.002 | 4 |
+| 杯子、牛奶、碗、刀、勺（场景） | 1.0 | 0.005 | 0.0001 | 3 |
+| 麦片、盘子（场景） | 0.95 | 0.3 | 0.1 | 3 |
+
+场景求解器：**金字塔摩擦锥**、impratio 30（只对椭圆锥起作用）、Newton、noslip 8 次、步长 2 ms。
+
+### 指尖摩擦实测（离线，Studio 同款物理，`friction_results/finger_friction_*.json`）
+单指伸直指尖朝下压桌面，对指尖施加 1 N/s 递增的横向力，指尖开始滑动时的 ft/fn：
+
+| 手指 | 金字塔锥（Studio 现状） | 椭圆锥（对照） |
+|---|---|---|
+| 食指 | 0.51 / 0.42 | 1.50 / 1.50 |
+| 中指 | 0.59 / 0.58 | 1.50 / 1.49 |
+| 无名指 | 0.39 / 0.90 | 1.50 / 1.28 |
+| 小指 | 0.67 / 0.63 | 卡住 / ≥1.50 |
+| 拇指 | 0.45 / 0.54 | 1.36 / 1.50 |
+
+（每格：压入 2 mm / 4 mm。）椭圆锥下测出 ≈ μ = 1.5，说明测量方法正确；**Studio 现在的设置下，指尖实际能用的摩擦系数只有约 0.4–0.65**（金字塔锥 + 很轻的指节 → 摩擦约束很软）。抓取余量要按这个值算。
+
+工具：
+- Studio 里实测：`t2_robot_side/src/robot/manipulation/finger_drag.py`（见同目录 `README.md`）
+- 离线力控测试：`tools/finger_friction_test.py --sim-src ... --scene ... [--cone elliptic]`
+- 离线抓取测试：`tools/friction_test.py`（2026-11-09 修正了测试台本身的手臂抖动；power 侧抓杯/奶/麦片/碗仍然抓不起，结论不变）。`friction_results/log_plate.csv`、`log_breakfast_spoon.csv` 是修正前的旧数据。
 
 ## 常见问题
 | 现象 | 原因 / 处理 |
