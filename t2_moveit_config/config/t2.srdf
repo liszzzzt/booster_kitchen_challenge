@@ -12,51 +12,7 @@
     <group name="right_arm" />
   </group>
 
-  <!-- Revo2 exposes six active joints per hand; distal joints mimic these. -->
-  <group name="left_hand">
-    <joint name="left_thumb_metacarpal_joint" />
-    <joint name="left_thumb_proximal_joint" />
-    <joint name="left_index_proximal_joint" />
-    <joint name="left_middle_proximal_joint" />
-    <joint name="left_ring_proximal_joint" />
-    <joint name="left_pinky_proximal_joint" />
-  </group>
-  <group name="right_hand">
-    <joint name="right_thumb_metacarpal_joint" />
-    <joint name="right_thumb_proximal_joint" />
-    <joint name="right_index_proximal_joint" />
-    <joint name="right_middle_proximal_joint" />
-    <joint name="right_ring_proximal_joint" />
-    <joint name="right_pinky_proximal_joint" />
-  </group>
-
-  <group_state name="open" group="left_hand">
-    <joint name="left_thumb_metacarpal_joint" value="0" />
-    <joint name="left_thumb_proximal_joint" value="0" />
-    <joint name="left_index_proximal_joint" value="0" />
-    <joint name="left_middle_proximal_joint" value="0" />
-    <joint name="left_ring_proximal_joint" value="0" />
-    <joint name="left_pinky_proximal_joint" value="0" />
-  </group_state>
-  <group_state name="open" group="right_hand">
-    <joint name="right_thumb_metacarpal_joint" value="0" />
-    <joint name="right_thumb_proximal_joint" value="0" />
-    <joint name="right_index_proximal_joint" value="0" />
-    <joint name="right_middle_proximal_joint" value="0" />
-    <joint name="right_ring_proximal_joint" value="0" />
-    <joint name="right_pinky_proximal_joint" value="0" />
-  </group_state>
-
-  <end_effector
-    name="left_revo2_hand"
-    parent_link="left_wrist_roll_link"
-    group="left_hand"
-    parent_group="left_arm" />
-  <end_effector
-    name="right_revo2_hand"
-    parent_link="right_wrist_roll_link"
-    group="right_hand"
-    parent_group="right_arm" />
+  <!-- Revo2 remains part of the robot collision model but is controlled separately. -->
   <!-- Adjacent links share a joint and are excluded from self-collision checks. -->
   <disable_collisions link1="head_booster_stereo_rgb_link" link2="head_color_optical_frame" reason="Adjacent" />
   <disable_collisions link1="head_pitch_link" link2="head_booster_stereo_rgb_link" reason="Adjacent" />
