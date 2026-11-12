@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot name="t2">
+  <!-- Arm chains contain exactly the seven actuated joints on each side. -->
+  <group name="left_arm">
+    <chain base_link="trunk" tip_link="left_wrist_roll_link" />
+  </group>
+  <group name="right_arm">
+    <chain base_link="trunk" tip_link="right_wrist_roll_link" />
+  </group>
+  <group name="both_arms">
+    <group name="left_arm" />
+    <group name="right_arm" />
+  </group>
+
+  <!-- Revo2 exposes six active joints per hand; distal joints mimic these. -->
+  <group name="left_hand">
+    <joint name="left_thumb_metacarpal_joint" />
+    <joint name="left_thumb_proximal_joint" />
+    <joint name="left_index_proximal_joint" />
+    <joint name="left_middle_proximal_joint" />
+    <joint name="left_ring_proximal_joint" />
+    <joint name="left_pinky_proximal_joint" />
+  </group>
+  <group name="right_hand">
+    <joint name="right_thumb_metacarpal_joint" />
+    <joint name="right_thumb_proximal_joint" />
+    <joint name="right_index_proximal_joint" />
+    <joint name="right_middle_proximal_joint" />
+    <joint name="right_ring_proximal_joint" />
+    <joint name="right_pinky_proximal_joint" />
+  </group>
+
+  <group_state name="open" group="left_hand">
+    <joint name="left_thumb_metacarpal_joint" value="0" />
+    <joint name="left_thumb_proximal_joint" value="0" />
+    <joint name="left_index_proximal_joint" value="0" />
+    <joint name="left_middle_proximal_joint" value="0" />
+    <joint name="left_ring_proximal_joint" value="0" />
+    <joint name="left_pinky_proximal_joint" value="0" />
+  </group_state>
+  <group_state name="open" group="right_hand">
+    <joint name="right_thumb_metacarpal_joint" value="0" />
+    <joint name="right_thumb_proximal_joint" value="0" />
+    <joint name="right_index_proximal_joint" value="0" />
+    <joint name="right_middle_proximal_joint" value="0" />
+    <joint name="right_ring_proximal_joint" value="0" />
+    <joint name="right_pinky_proximal_joint" value="0" />
+  </group_state>
+
+  <end_effector
+    name="left_revo2_hand"
+    parent_link="left_wrist_roll_link"
+    group="left_hand"
+    parent_group="left_arm" />
+  <end_effector
+    name="right_revo2_hand"
+    parent_link="right_wrist_roll_link"
+    group="right_hand"
+    parent_group="right_arm" />
+  <!-- Adjacent links share a joint and are excluded from self-collision checks. -->
+  <disable_collisions link1="head_booster_stereo_rgb_link" link2="head_color_optical_frame" reason="Adjacent" />
+  <disable_collisions link1="head_pitch_link" link2="head_booster_stereo_rgb_link" reason="Adjacent" />
+  <disable_collisions link1="head_yaw_link" link2="head_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="left_ankle_pitch_link" link2="left_ankle_roll_link" reason="Adjacent" />
+  <disable_collisions link1="left_base_link" link2="left_index_proximal_link" reason="Adjacent" />
+  <disable_collisions link1="left_base_link" link2="left_middle_proximal_link" reason="Adjacent" />
+  <disable_collisions link1="left_base_link" link2="left_pinky_proximal_link" reason="Adjacent" />
+  <disable_collisions link1="left_base_link" link2="left_ring_proximal_link" reason="Adjacent" />
+  <disable_collisions link1="left_base_link" link2="left_thumb_metacarpal_link" reason="Adjacent" />
+  <disable_collisions link1="left_elbow_pitch_link" link2="left_elbow_yaw_link" reason="Adjacent" />
+  <disable_collisions link1="left_elbow_yaw_link" link2="left_wrist_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="left_hip_pitch_link" link2="left_hip_roll_link" reason="Adjacent" />
+  <disable_collisions link1="left_hip_roll_link" link2="left_hip_yaw_link" reason="Adjacent" />
+  <disable_collisions link1="left_hip_yaw_link" link2="left_knee_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="left_index_distal_link" link2="left_index_tip_link" reason="Adjacent" />
+  <disable_collisions link1="left_index_distal_link" link2="left_index_touch_link" reason="Adjacent" />
+  <disable_collisions link1="left_index_proximal_link" link2="left_index_distal_link" reason="Adjacent" />
+  <disable_collisions link1="left_knee_pitch_link" link2="left_ankle_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="left_middle_distal_link" link2="left_middle_tip_link" reason="Adjacent" />
+  <disable_collisions link1="left_middle_distal_link" link2="left_middle_touch_link" reason="Adjacent" />
+  <disable_collisions link1="left_middle_proximal_link" link2="left_middle_distal_link" reason="Adjacent" />
+  <disable_collisions link1="left_pinky_distal_link" link2="left_pinky_tip_link" reason="Adjacent" />
+  <disable_collisions link1="left_pinky_distal_link" link2="left_pinky_touch_link" reason="Adjacent" />
+  <disable_collisions link1="left_pinky_proximal_link" link2="left_pinky_distal_link" reason="Adjacent" />
+  <disable_collisions link1="left_ring_distal_link" link2="left_ring_tip_link" reason="Adjacent" />
+  <disable_collisions link1="left_ring_distal_link" link2="left_ring_touch_link" reason="Adjacent" />
+  <disable_collisions link1="left_ring_proximal_link" link2="left_ring_distal_link" reason="Adjacent" />
+  <disable_collisions link1="left_shoulder_pitch_link" link2="left_shoulder_roll_link" reason="Adjacent" />
+  <disable_collisions link1="left_shoulder_roll_link" link2="left_elbow_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="left_thumb_distal_link" link2="left_thumb_tip_link" reason="Adjacent" />
+  <disable_collisions link1="left_thumb_distal_link" link2="left_thumb_touch_link" reason="Adjacent" />
+  <disable_collisions link1="left_thumb_metacarpal_link" link2="left_thumb_proximal_link" reason="Adjacent" />
+  <disable_collisions link1="left_thumb_proximal_link" link2="left_thumb_distal_link" reason="Adjacent" />
+  <disable_collisions link1="left_wrist_pitch_link" link2="left_wrist_yaw_link" reason="Adjacent" />
+  <disable_collisions link1="left_wrist_roll_link" link2="left_base_link" reason="Adjacent" />
+  <disable_collisions link1="left_wrist_yaw_link" link2="left_wrist_roll_link" reason="Adjacent" />
+  <disable_collisions link1="right_ankle_pitch_link" link2="right_ankle_roll_link" reason="Adjacent" />
+  <disable_collisions link1="right_base_link" link2="right_index_proximal_link" reason="Adjacent" />
+  <disable_collisions link1="right_base_link" link2="right_middle_proximal_link" reason="Adjacent" />
+  <disable_collisions link1="right_base_link" link2="right_pinky_proximal_link" reason="Adjacent" />
+  <disable_collisions link1="right_base_link" link2="right_ring_proximal_link" reason="Adjacent" />
+  <disable_collisions link1="right_base_link" link2="right_thumb_metacarpal_link" reason="Adjacent" />
+  <disable_collisions link1="right_elbow_pitch_link" link2="right_elbow_yaw_link" reason="Adjacent" />
+  <disable_collisions link1="right_elbow_yaw_link" link2="right_wrist_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="right_hip_pitch_link" link2="right_hip_roll_link" reason="Adjacent" />
+  <disable_collisions link1="right_hip_roll_link" link2="right_hip_yaw_link" reason="Adjacent" />
+  <disable_collisions link1="right_hip_yaw_link" link2="right_knee_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="right_index_distal_link" link2="right_index_tip_link" reason="Adjacent" />
+  <disable_collisions link1="right_index_distal_link" link2="right_index_touch_link" reason="Adjacent" />
+  <disable_collisions link1="right_index_proximal_link" link2="right_index_distal_link" reason="Adjacent" />
+  <disable_collisions link1="right_knee_pitch_link" link2="right_ankle_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="right_middle_distal_link" link2="right_middle_tip_link" reason="Adjacent" />
+  <disable_collisions link1="right_middle_distal_link" link2="right_middle_touch_link" reason="Adjacent" />
+  <disable_collisions link1="right_middle_proximal_link" link2="right_middle_distal_link" reason="Adjacent" />
+  <disable_collisions link1="right_pinky_distal_link" link2="right_pinky_tip_link" reason="Adjacent" />
+  <disable_collisions link1="right_pinky_distal_link" link2="right_pinky_touch_link" reason="Adjacent" />
+  <disable_collisions link1="right_pinky_proximal_link" link2="right_pinky_distal_link" reason="Adjacent" />
+  <disable_collisions link1="right_ring_distal_link" link2="right_ring_tip_link" reason="Adjacent" />
+  <disable_collisions link1="right_ring_distal_link" link2="right_ring_touch_link" reason="Adjacent" />
+  <disable_collisions link1="right_ring_proximal_link" link2="right_ring_distal_link" reason="Adjacent" />
+  <disable_collisions link1="right_shoulder_pitch_link" link2="right_shoulder_roll_link" reason="Adjacent" />
+  <disable_collisions link1="right_shoulder_roll_link" link2="right_elbow_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="right_thumb_distal_link" link2="right_thumb_tip_link" reason="Adjacent" />
+  <disable_collisions link1="right_thumb_distal_link" link2="right_thumb_touch_link" reason="Adjacent" />
+  <disable_collisions link1="right_thumb_metacarpal_link" link2="right_thumb_proximal_link" reason="Adjacent" />
+  <disable_collisions link1="right_thumb_proximal_link" link2="right_thumb_distal_link" reason="Adjacent" />
+  <disable_collisions link1="right_wrist_pitch_link" link2="right_wrist_yaw_link" reason="Adjacent" />
+  <disable_collisions link1="right_wrist_roll_link" link2="right_base_link" reason="Adjacent" />
+  <disable_collisions link1="right_wrist_yaw_link" link2="right_wrist_roll_link" reason="Adjacent" />
+  <disable_collisions link1="trunk" link2="e1r_link" reason="Adjacent" />
+  <disable_collisions link1="trunk" link2="head_yaw_link" reason="Adjacent" />
+  <disable_collisions link1="trunk" link2="left_shoulder_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="trunk" link2="logo" reason="Adjacent" />
+  <disable_collisions link1="trunk" link2="right_shoulder_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="trunk" link2="waist_booster_stereo_rgb_link" reason="Adjacent" />
+  <disable_collisions link1="trunk" link2="waist_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="waist_booster_stereo_rgb_link" link2="waist_color_optical_frame" reason="Adjacent" />
+  <disable_collisions link1="waist_pitch_link" link2="waist_roll_link" reason="Adjacent" />
+  <disable_collisions link1="waist_roll_link" link2="waist_yaw_link" reason="Adjacent" />
+  <disable_collisions link1="waist_yaw_link" link2="left_hip_pitch_link" reason="Adjacent" />
+  <disable_collisions link1="waist_yaw_link" link2="right_hip_pitch_link" reason="Adjacent" />
+</robot>

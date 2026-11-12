@@ -1,0 +1,37 @@
+# Conservative planning-only limits. Robot side must enforce final hardware limits.
+joint_limits:
+  left_shoulder_pitch_joint: &arm_joint
+    has_velocity_limits: true
+    max_velocity: 0.5
+    has_acceleration_limits: true
+    max_acceleration: 1.0
+  left_shoulder_roll_joint: *arm_joint
+  left_elbow_pitch_joint: *arm_joint
+  left_elbow_yaw_joint: *arm_joint
+  left_wrist_pitch_joint: *arm_joint
+  left_wrist_yaw_joint: *arm_joint
+  left_wrist_roll_joint: *arm_joint
+  right_shoulder_pitch_joint: *arm_joint
+  right_shoulder_roll_joint: *arm_joint
+  right_elbow_pitch_joint: *arm_joint
+  right_elbow_yaw_joint: *arm_joint
+  right_wrist_pitch_joint: *arm_joint
+  right_wrist_yaw_joint: *arm_joint
+  right_wrist_roll_joint: *arm_joint
+
+  left_thumb_metacarpal_joint: &hand_joint
+    has_velocity_limits: true
+    max_velocity: 0.5
+    has_acceleration_limits: true
+    max_acceleration: 1.0
+  left_thumb_proximal_joint: *hand_joint
+  left_index_proximal_joint: *hand_joint
+  left_middle_proximal_joint: *hand_joint
+  left_ring_proximal_joint: *hand_joint
+  left_pinky_proximal_joint: *hand_joint
+  right_thumb_metacarpal_joint: *hand_joint
+  right_thumb_proximal_joint: *hand_joint
+  right_index_proximal_joint: *hand_joint
+  right_middle_proximal_joint: *hand_joint
+  right_ring_proximal_joint: *hand_joint
+  right_pinky_proximal_joint: *hand_joint

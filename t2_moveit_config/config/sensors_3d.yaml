@@ -1,0 +1,12 @@
+sensors:
+  - head_depth
+
+head_depth:
+  sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
+  point_cloud_topic: /t2/head/depth/points
+  max_range: 4.0
+  point_subsample: 1
+  padding_offset: 0.03
+  padding_scale: 1.0
+  max_update_rate: 5.0
+  filtered_cloud_topic: /t2/head/depth/filtered_points

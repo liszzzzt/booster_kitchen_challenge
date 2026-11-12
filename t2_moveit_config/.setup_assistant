@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: t2_description
+    relative_path: urdf/t2.urdf.xacro
+  srdf:
+    relative_path: config/t2.srdf
+  package_settings:
+    author_name: hongkun
+    author_email: yuhongkun231@gmail.com
+    generated_timestamp: 0
