@@ -36,5 +36,17 @@ After stopping all T2WS GUI applications, revoke the temporary X11 permission:
 
     xhost -si:localuser:root
 
+## Revo2 finger TF (`revo2_tf` service)
+
+`docker compose up -d` also starts `revo2_tf` (container `t2ws-revo2-tf`). It publishes the Revo2
+finger frames (`<side>_base_link`, finger links, `*_tip_link`, `*_touch_link`) under
+`<side>_wrist_roll_link` in `/tf` and `/tf_static`, from the sim plugin's `/revo2/hand_state`.
+See `t2_robot_side/src/robot/manipulation/revo2_tf/README.md`.
+
+    docker compose ps                  # t2ws-dev and t2ws-revo2-tf running
+    docker compose logs -f revo2_tf    # "Robot initialized" x2, "receiving hand state"
+    docker compose up -d t2ws          # dev container only
+    docker compose stop revo2_tf       # stop it (do this before running the launch by hand)
+
 Nothing in the Booster Studio container is modified. DDS uses UDP over the
 shared network namespace according to `fastdds_profiles.xml`.

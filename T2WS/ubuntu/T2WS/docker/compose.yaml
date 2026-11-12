@@ -1,4 +1,6 @@
 # One long-lived container:  docker compose up -d --build   then   docker compose exec t2ws bash
+# `up -d` also starts revo2_tf (Revo2 finger frames in /tf, /tf_static) in the background;
+# `docker compose up -d t2ws` starts only the dev container.
 # Requires the Booster Studio sim container to be running first.
 name: t2ws
 services:
@@ -29,3 +31,24 @@ services:
     command: sleep infinity
     tty: true
     stdin_open: true
+
+  # Revo2 finger frames in /tf and /tf_static (t2_robot_side/src/robot/manipulation/revo2_tf):
+  # /revo2/hand_state -> joint states -> 2x robot_state_publisher under <side>_wrist_roll_link.
+  # Same image, network namespace, mount and DDS settings as t2ws; runs in the background and restarts
+  # on failure. Logs: docker compose logs -f revo2_tf    Stop: docker compose stop revo2_tf
+  revo2_tf:
+    image: t2ws:kilted
+    pull_policy: never          # built by the t2ws service above, never pulled
+    container_name: t2ws-revo2-tf
+    depends_on:
+      - t2ws
+    network_mode: "container:${SIM_CONTAINER:?Set SIM_CONTAINER first}"
+    volumes:
+      - ../../../..:/ws
+    working_dir: /ws
+    environment:
+      ROS_DOMAIN_ID: "0"
+      FASTRTPS_DEFAULT_PROFILES_FILE: /ws/T2WS/ubuntu/T2WS/docker/fastdds_profiles.xml
+      FASTDDS_DEFAULT_PROFILES_FILE: /ws/T2WS/ubuntu/T2WS/docker/fastdds_profiles.xml
+    command: ["ros2", "launch", "/ws/t2_robot_side/src/robot/manipulation/revo2_tf/revo2_tf.launch.py"]
+    restart: unless-stopped
