@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ros-kilted-cv-bridge ros-kilted-teleop-twist-keyboard \
         ros-kilted-cartographer ros-kilted-cartographer-ros \
         ros-kilted-navigation2 ros-kilted-nav2-bringup \
-        ros-kilted-moveit \
+        ros-kilted-moveit ros-kilted-moveit-ros-perception \
         ros-kilted-rosbag2 ros-kilted-rosbag2-storage-default-plugins \
         libgl1 libglib2.0-0 python3-venv \
     && rm -rf /var/lib/apt/lists/*
