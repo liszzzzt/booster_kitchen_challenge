@@ -18,7 +18,12 @@ RUN python3 -m venv --system-site-packages /opt/t2ws-venv \
     && /opt/t2ws-venv/bin/python -m pip install --upgrade \
         pip wheel "setuptools>=68,<80"
 
-RUN /opt/t2ws-venv/bin/python -m pip install --no-cache-dir ultralytics
+RUN /opt/t2ws-venv/bin/python -m pip install --no-cache-dir \
+        "torch==2.15.0+cpu" "torchvision==0.29.2+cpu" \
+        --index-url https://download.pytorch.org/whl/cpu \
+    && /opt/t2ws-venv/bin/python -m pip install --no-cache-dir \
+        "numpy==1.26.4" "opencv-python==4.10.0.84" \
+        "ultralytics==8.4.208"
 
 ENV PATH="/opt/t2ws-venv/bin:${PATH}"
 
