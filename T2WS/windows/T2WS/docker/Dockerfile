@@ -18,6 +18,8 @@ RUN python3 -m venv --system-site-packages /opt/t2ws-venv \
     && /opt/t2ws-venv/bin/python -m pip install --upgrade \
         pip wheel "setuptools>=68,<80"
 
+RUN /opt/t2ws-venv/bin/python -m pip install --no-cache-dir ultralytics
+
 ENV PATH="/opt/t2ws-venv/bin:${PATH}"
 
 # Install optional application dependencies in /opt/t2ws-venv when they are needed.
