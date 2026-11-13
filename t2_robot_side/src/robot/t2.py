@@ -6,6 +6,7 @@ from .manipulation.control import ManipulationControl
 from .relay_bridges.imu import ImuRelay
 from .relay_bridges.joint_states import JointStatesRelay
 from .relay_bridges.odometry import OdometryRelay
+from .relay_bridges.revo2 import Revo2Relay
 from .relay_bridges.tf import TfRelay
 from .relay_bridges.tf_static import TfStaticRelay
 
@@ -27,6 +28,7 @@ class T2Robot:
         self.imu_relay = ImuRelay(relay_node)
         self.odometry_relay = OdometryRelay(relay_node)
         self.joint_states_relay = JointStatesRelay(relay_node)
+        self.revo2_relay = Revo2Relay(relay_node, self.client)
 
     def locomotion(self, msg, source="schedule"):
         with self.motion_state_lock:

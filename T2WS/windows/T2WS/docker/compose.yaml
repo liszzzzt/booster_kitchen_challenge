@@ -49,5 +49,7 @@ services:
       ROS_DOMAIN_ID: "0"
       FASTRTPS_DEFAULT_PROFILES_FILE: /ws/T2WS/windows/T2WS/docker/fastdds_profiles.xml
       FASTDDS_DEFAULT_PROFILES_FILE: /ws/T2WS/windows/T2WS/docker/fastdds_profiles.xml
-    command: ["ros2", "launch", "/ws/t2_robot_side/src/robot/manipulation/revo2_tf/revo2_tf.launch.py"]
+    # REVO2_TF_TOPICS=t2 on the real robot (relayed /t2/... topics), default sim (Booster Studio)
+    command: ["ros2", "launch", "/ws/t2_robot_side/src/robot/manipulation/revo2_tf/revo2_tf.launch.py",
+              "topics:=${REVO2_TF_TOPICS:-sim}"]
     restart: unless-stopped

@@ -20,6 +20,18 @@ ros2 launch /ws/t2_robot_side/src/robot/manipulation/revo2_tf/revo2_tf.launch.py
 
 参数：`frame_prefix:=robot1/`（只有 Studio 给坐标系加了前缀时才需要；单机器人场景不用），`robot:=robot1`，`rate_hz:=50.0`。
 
+## 真机（topics:=t2）
+
+真机上 T2WS 只能看到机器人端中继出来的 `/t2/...` 话题（见 `robot/relay_bridges/revo2.py`），这时：
+
+```bash
+ros2 launch /ws/t2_robot_side/src/robot/manipulation/revo2_tf/revo2_tf.launch.py topics:=t2
+```
+
+输入改为 `/t2/revo2/hand_state` + `/t2/joint_states`，输出改为 `/t2/tf` + `/t2/tf_static`（MoveIt、RViz、Nav2 用的就是这两个）。
+compose 里的 `revo2_tf` 服务用环境变量切换：启动前设 `REVO2_TF_TOPICS=t2`（默认 `sim`）。
+Booster Studio 里保持默认 `sim`：手指坐标系先进仿真的 `/tf`，再由机器人端 TfRelay 复制到 `/t2/tf`；两种模式不要同时开，否则 `/t2/tf` 里每个手指坐标系会有两份。
+
 ## 新增的坐标系（每只手，以 right 为例）
 
 | 坐标系 | 父坐标系 | 话题 |

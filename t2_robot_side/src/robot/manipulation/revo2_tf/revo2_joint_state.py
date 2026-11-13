@@ -99,6 +99,7 @@ def parse_hand_state(text: str, robot: str, use_target: bool) -> Optional[Tuple[
 def main() -> None:
     import rclpy
     from rclpy.node import Node
+    from rclpy.qos import qos_profile_sensor_data
     from sensor_msgs.msg import JointState
     from std_msgs.msg import String
 
@@ -122,8 +123,8 @@ def main() -> None:
             self.pub = {s: self.create_publisher(JointState, f"/revo2/{s}/joint_states", 10) for s in SIDES}
             self.pub_all = self.create_publisher(JointState, "/revo2/joint_states", 10)
             self.create_subscription(String, hs_topic, self.on_hand_state, 10)
-            if sync_topic:
-                self.create_subscription(JointState, sync_topic, self.on_sync, 10)
+            if sync_topic:      # best effort: matches both reliable (Studio) and sensor-data (/t2/...) publishers
+                self.create_subscription(JointState, sync_topic, self.on_sync, qos_profile_sensor_data)
             # fallback when the sync topic is silent: publish on our own clock
             self.create_timer(max(self.min_dt, 0.02), self.on_timer)
             self.get_logger().info(

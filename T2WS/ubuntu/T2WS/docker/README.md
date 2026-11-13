@@ -48,5 +48,9 @@ See `t2_robot_side/src/robot/manipulation/revo2_tf/README.md`.
     docker compose up -d t2ws          # dev container only
     docker compose stop revo2_tf       # stop it (do this before running the launch by hand)
 
+On the real robot T2WS only sees the robot-side relays (`/t2/...`); start it with
+`REVO2_TF_TOPICS=t2` so it reads `/t2/revo2/hand_state` and publishes `/t2/tf`, `/t2/tf_static`
+(default `sim` = Booster Studio).
+
 Nothing in the Booster Studio container is modified. DDS uses UDP over the
 shared network namespace according to `fastdds_profiles.xml`.
