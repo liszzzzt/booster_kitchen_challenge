@@ -7,6 +7,7 @@ Press q or Escape in the RGB window to quit.
 """
 
 import argparse
+import json
 import time
 
 import cv2
@@ -15,14 +16,15 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import CompressedImage, Image
+from std_msgs.msg import String
 
 from .main import inference
-
 
 class T2DetectionViewer(Node):
     RGB_WINDOW = "T2 RGB Detection"
     DEPTH_WINDOW = "T2 Depth"
     STUDIO_TOPIC = "/t2/vision/detection/image_compressed"
+    DETECTIONS_TOPIC = "/t2/vision/detections"
 
     def __init__(self, rgb_topic=None, depth_topic=None, publish_topic=None):
         super().__init__("t2_detection_viewer")
@@ -41,8 +43,12 @@ class T2DetectionViewer(Node):
             self.create_publisher(CompressedImage, publish_topic, 1)
             if publish_topic else None
         )
+        self.detections_publisher = self.create_publisher(
+            String, self.DETECTIONS_TOPIC, 1
+        )
         if publish_topic:
             self.get_logger().info(f"Annotated RGB output: {publish_topic}")
+        self.get_logger().info(f"Detection data output: {self.DETECTIONS_TOPIC}")
         self._last_wait_log = time.monotonic()
         self.create_timer(1.0, self._discover_topics)
         self._discover_topics()
@@ -183,6 +189,23 @@ class T2DetectionViewer(Node):
         message.data = encoded.tobytes()
         self.annotated_publisher.publish(message)
 
+    def publish_detections(self, detections, image_width, image_height):
+        header = self.latest_rgb_header
+        stamp = header.stamp if header is not None else None
+        payload = {
+            "stamp": {
+                "sec": stamp.sec if stamp is not None else 0,
+                "nanosec": stamp.nanosec if stamp is not None else 0,
+            },
+            "frame_id": header.frame_id if header is not None else "",
+            "image_width": image_width,
+            "image_height": image_height,
+            "detections": detections,
+        }
+        message = String()
+        message.data = json.dumps(payload, ensure_ascii=False)
+        self.detections_publisher.publish(message)
+
 
 def draw_detections(bgr, detections):
     for detection in detections:
@@ -248,6 +271,7 @@ def main():
                             rgb, model_path=args.model,
                             confidence=args.conf, device=args.device,
                         )
+                        node.publish_detections(detections, rgb.shape[1], rgb.shape[0])
                         draw_detections(bgr, detections)
                     except Exception as error:
                         inference_failed = True

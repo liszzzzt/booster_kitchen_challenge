@@ -13,6 +13,7 @@ import numpy as np
 
 DEFAULT_MODEL = Path(__file__).resolve().parent / "model" / "yolo26l_kitchen.pt"
 LABEL_ALIASES = {"table": "simpleTable"}
+BORDER_MARGIN_PX = 2
 
 
 @lru_cache(maxsize=2)
@@ -75,6 +76,12 @@ def inference(rgb, *, model_path=None, confidence=None, device=None):
         bottom = max(0, min(height, round(max(y1, y2))))
         if right <= left or bottom <= top:
             continue
+        is_fully_visible = (
+            left > BORDER_MARGIN_PX
+            and top > BORDER_MARGIN_PX
+            and right < width - BORDER_MARGIN_PX
+            and bottom < height - BORDER_MARGIN_PX
+        )
         class_id = int(cls_id)
         model_label = result.names[class_id]
         detections.append({
@@ -83,5 +90,10 @@ def inference(rgb, *, model_path=None, confidence=None, device=None):
             "model_label": model_label,
             "class_id": class_id,
             "confidence": float(score),
+            "is_fully_visible": is_fully_visible,
+            "center_px": (
+                [(left + right) / 2, (top + bottom) / 2]
+                if is_fully_visible else None
+            ),
         })
     return detections

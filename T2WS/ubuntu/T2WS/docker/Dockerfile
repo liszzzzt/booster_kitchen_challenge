@@ -20,6 +20,13 @@ RUN python3 -m venv --system-site-packages /opt/t2ws-venv \
 
 ENV PATH="/opt/t2ws-venv/bin:${PATH}"
 
+RUN python -m pip install --no-cache-dir \
+        "torch==2.15.0+cpu" "torchvision==0.29.2+cpu" \
+        --index-url https://download.pytorch.org/whl/cpu \
+    && python -m pip install --no-cache-dir \
+        "numpy==1.26.4" "opencv-python==4.10.0.84" \
+        "ultralytics==8.4.208"
+
 # Install optional application dependencies in /opt/t2ws-venv when they are needed.
 # RUN pip3 install --no-cache-dir boosteros onnxruntime onnx matplotlib
 
