@@ -28,7 +28,7 @@ Visualization Manager:
         Attached Body Color: 150; 50; 150
         Robot Alpha: 1
         Show Robot Collision: false
-        Show Robot Visual: true
+        Show Robot Visual: false
       Value: true
   Enabled: true
   Global Options:

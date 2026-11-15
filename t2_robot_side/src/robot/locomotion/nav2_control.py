@@ -1,5 +1,5 @@
 class Nav2Control:
-    MAX_FORWARD_SPEED = 0.4  # m/s
+    MAX_FORWARD_SPEED = 1.2  # m/s
     MAX_ROTATION_SPEED = 0.6  # rad/s
 
     def __init__(self, client):

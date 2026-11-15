@@ -19,6 +19,7 @@ class CenterControl():
             elif 'pick' in command:
                 self.server_node.send_manipulation_command({
                     "id": command_id,
+                    "action": "pick",
                     "target": "cup",
                     "frame_id": "camera",
                     "coordinate": [0.3, -0.02, 0.1, 0.8, 1, 1.57]

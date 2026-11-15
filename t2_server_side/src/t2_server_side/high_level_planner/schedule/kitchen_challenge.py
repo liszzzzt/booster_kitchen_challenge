@@ -17,6 +17,6 @@ object_cls_dic = {
 
 
 schedule = {
-    1: "walk to simpleTable",
-    2: "pick cube",
+    # 1: "walk to simpleTable",
+    1: "pick cup",
 }
