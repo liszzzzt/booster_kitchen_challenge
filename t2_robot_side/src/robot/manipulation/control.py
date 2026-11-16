@@ -27,6 +27,11 @@ class ManipulationControl():
         self.moveit2_control.stop()
 
     def execute_schedule(self):
+        self.moveit2_control.stop()
+        action = self.client.do_action("hand_wave")
+        action.wait()
+        return True
+
         # boosteros_examples: joint_upper_control_example.py
         self.moveit2_control.stop()
 

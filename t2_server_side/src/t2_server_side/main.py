@@ -3,6 +3,7 @@ import threading
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
 
+from t2_server_side.ros.nav2_client import T2Nav2Client
 from t2_server_side.ros.node import T2ServerNode
 from t2_server_side.high_level_planner.center_control import CenterControl
 from t2_server_side.remote_control.remote_control import (
@@ -14,12 +15,14 @@ from t2_server_side.remote_control.remote_control import (
 def main():
     rclpy.init()
     server_node = T2ServerNode()
+    nav2_client = T2Nav2Client()
     executor = SingleThreadedExecutor()
     executor.add_node(server_node)
+    executor.add_node(nav2_client)
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
 
-    center_control = CenterControl(server_node)
+    center_control = CenterControl(server_node, nav2_client)
     remote_control = RemoteControl(server_node)
 
     if not server_node.wait_for_robot():
@@ -35,6 +38,7 @@ def main():
         executor.shutdown()
         executor_thread.join()
         server_node.destroy_node()
+        nav2_client.destroy_node()
         rclpy.try_shutdown()
 
 

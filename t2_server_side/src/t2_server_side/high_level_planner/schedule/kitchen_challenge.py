@@ -1,4 +1,7 @@
 
+import math
+
+
 action_dic = {
     "walk": "locomotion",
     "crouch": "locomotion",
@@ -15,8 +18,16 @@ object_cls_dic = {
     "o2":"plate",
 }
 
+navigation_goals = {
+    "simpleTable": [
+        3.61,
+        0.10,
+        -math.radians(70),
+    ],
+}
+
 
 schedule = {
-    # 1: "walk to simpleTable",
-    1: "pick cup",
+    1: "walk to simpleTable",
+    2: "pick cup",
 }
