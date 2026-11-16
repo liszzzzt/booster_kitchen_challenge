@@ -1,2 +1,13 @@
 door
 door_handle
+spoon
+knife
+plate
+bowl
+cup
+milk
+cereal
+table
+bin
+dishwasher
+cabinet

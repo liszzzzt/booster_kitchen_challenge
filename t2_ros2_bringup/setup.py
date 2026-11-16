@@ -30,6 +30,10 @@ setup(
             os.path.join("share", package_name, "config", "rviz2"),
             glob("config/rviz2/*.rviz"),
         ),
+        (
+            os.path.join("share", package_name, "maps", "kitchen"),
+            glob("maps/kitchen/*"),
+        ),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
