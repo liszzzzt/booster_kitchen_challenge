@@ -1,7 +1,4 @@
 
-import math
-
-
 action_dic = {
     "walk": "locomotion",
     "crouch": "locomotion",
@@ -22,7 +19,7 @@ navigation_goals = {
     "simpleTable": [
         3.61,
         0.10,
-        -math.radians(70),
+        math.radians(0.0),
     ],
 }
 
