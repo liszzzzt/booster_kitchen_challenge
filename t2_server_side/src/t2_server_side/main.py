@@ -1,4 +1,3 @@
-import time
 import threading
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
@@ -6,10 +5,7 @@ from rclpy.executors import SingleThreadedExecutor
 from t2_server_side.ros.nav2_client import T2Nav2Client
 from t2_server_side.ros.node import T2ServerNode
 from t2_server_side.high_level_planner.center_control import CenterControl
-from t2_server_side.remote_control.remote_control import (
-    RemoteControl,
-    read_key,
-)
+from t2_server_side.remote_control.remote_control import RemoteControl
 
 
 def main():
@@ -25,12 +21,16 @@ def main():
     center_control = CenterControl(server_node, nav2_client)
     remote_control = RemoteControl(server_node)
 
-    if not server_node.wait_for_robot():
-        print("Robot side is not available.")
-        return
-    print("Server is ready.")
-
     try:
+        if not server_node.wait_for_robot():
+            print("Robot side is not available.")
+            return
+
+        if not server_node.check_door():
+            print("Door is closed or E1R data is unavailable. Schedule stopped.")
+            return
+
+        print("Door is open. Server is ready.")
         center_control.execute_schedule()
         print("Schedule finished. Remote control enabled.")
         remote_control.launch()
