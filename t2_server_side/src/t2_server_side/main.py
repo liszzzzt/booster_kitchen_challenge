@@ -27,8 +27,8 @@ def main():
             return
 
         if not server_node.check_door():
-            print("Door is closed or E1R data is unavailable. Schedule stopped.")
-            return
+            print("Door is closed. Schedule stopped. Remote control enabled.")
+            remote_control.launch()
 
         print("Door is open. Server is ready.")
         center_control.execute_schedule()
