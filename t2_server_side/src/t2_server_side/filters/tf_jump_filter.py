@@ -11,7 +11,7 @@ from tf2_msgs.msg import TFMessage
 
 
 MAX_TRANSLATION_JUMP = 0.30
-MAX_YAW_JUMP = math.radians(20)
+MAX_YAW_JUMP = math.radians(90)
 
 
 class TfJumpFilterNode(Node):
