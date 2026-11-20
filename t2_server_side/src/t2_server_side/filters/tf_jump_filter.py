@@ -1,3 +1,4 @@
+import copy
 import math
 
 from rclpy.node import Node
@@ -76,6 +77,9 @@ class TfJumpFilterNode(Node):
                         f"yaw={math.degrees(yaw_jump):.1f} deg"
                     )
                 self.rejecting_jump = True
+                held_transform = copy.deepcopy(self.previous_map_to_odom)
+                held_transform.header.stamp = transform.header.stamp
+                filtered_transforms.append(held_transform)
                 continue
 
             if self.rejecting_jump:

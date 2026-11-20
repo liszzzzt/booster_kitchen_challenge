@@ -23,20 +23,30 @@ class T2Nav2Client(Node):
             "/spin",
         )
 
-    def spin(self, angle=math.pi / 2.0):
-        # Five 90-degree rotations for the initial localization scan.
+    def spin(self):
+        spin_angles = [
+            math.radians(90),
+            math.radians(90),
+            math.radians(90),
+            math.radians(90),
+            math.radians(60),
+        ]
+
         while rclpy.ok() and not self.spin_client.wait_for_server(timeout_sec=1.0):
             print("Waiting for Nav2 spin...")
 
         if not rclpy.ok():
             return False
 
-        for spin_index in range(5):
+        for spin_index, angle in enumerate(spin_angles):
             goal = Spin.Goal()
             goal.target_yaw = angle
             goal.time_allowance.sec = 25
 
-            print(f"Nav2 spin {spin_index + 1}/5: angle={angle:.2f}")
+            print(
+                f"Nav2 spin {spin_index + 1}/5: "
+                f"angle={math.degrees(angle):.0f} degrees"
+            )
             send_future = self.spin_client.send_goal_async(goal)
             while rclpy.ok() and not send_future.done():
                 time.sleep(0.1)
