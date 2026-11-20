@@ -36,7 +36,15 @@ def main():
             print("Robot side is not available.")
             return
 
-        input("press Enter to start: ")
+        mode = input("1: schedule, 2: remote control: ")
+
+        if mode == "2":
+            remote_control.launch()
+            return
+
+        if mode != "1":
+            print("Unknown mode.")
+            return
 
         if not server_node.check_door():
             print("Door is closed. Schedule stopped. Remote control enabled.")
