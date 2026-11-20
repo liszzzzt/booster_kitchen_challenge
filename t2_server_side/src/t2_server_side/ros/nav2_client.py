@@ -4,7 +4,7 @@ import time
 import rclpy
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped
-from nav2_msgs.action import NavigateToPose
+from nav2_msgs.action import NavigateToPose, Spin
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
@@ -17,6 +17,48 @@ class T2Nav2Client(Node):
             NavigateToPose,
             "/navigate_to_pose",
         )
+        self.spin_client = ActionClient(
+            self,
+            Spin,
+            "/spin",
+        )
+
+    def spin(self, angle=2.0 * math.pi):
+        # initial 360 rotation, to stable localization
+        while rclpy.ok() and not self.spin_client.wait_for_server(timeout_sec=1.0):
+            print("Waiting for Nav2 spin...")
+
+        if not rclpy.ok():
+            return False
+
+        goal = Spin.Goal()
+        goal.target_yaw = angle
+        goal.time_allowance.sec = 25
+
+        print(f"Nav2 spin: angle={angle:.2f}")
+        send_future = self.spin_client.send_goal_async(goal)
+        while rclpy.ok() and not send_future.done():
+            time.sleep(0.1)
+
+        goal_handle = send_future.result()
+        if not goal_handle.accepted:
+            print("Nav2 spin rejected")
+            return False
+
+        result_future = goal_handle.get_result_async()
+        while rclpy.ok() and not result_future.done():
+            time.sleep(0.1)
+
+        if not rclpy.ok():
+            return False
+
+        result = result_future.result()
+        if result.status == GoalStatus.STATUS_SUCCEEDED:
+            print("Nav2 spin completed")
+            return True
+
+        print(f"Nav2 spin failed with status {result.status}")
+        return False
 
     def navigate_to(self, x, y, yaw):
         while rclpy.ok() and not self.client.wait_for_server(timeout_sec=1.0):

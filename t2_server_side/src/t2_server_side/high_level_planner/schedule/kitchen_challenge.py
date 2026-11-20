@@ -26,6 +26,8 @@ navigation_goals = {
 
 
 schedule = {
+    0: "spin",
     1: "walk to simpleTable",
     2: "pick cup",
+    99: "spin"
 }

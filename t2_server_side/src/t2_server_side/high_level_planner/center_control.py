@@ -1,3 +1,5 @@
+import time
+
 from t2_server_side.high_level_planner.schedule.kitchen_challenge import (
     navigation_goals,
     schedule,
@@ -13,7 +15,11 @@ class CenterControl():
         for command_id, command in schedule.items():
             print(command_id, command)
             success = False
-            if 'walk' in command:
+            if 'spin' in command:
+                success = self.nav2_client.spin()
+                if success:
+                    time.sleep(2)
+            elif 'walk' in command:
                 target = command.split()[-1]
                 x, y, yaw = navigation_goals[target]
                 print(f"Nav2: [{x}, {y}, {yaw}]")
