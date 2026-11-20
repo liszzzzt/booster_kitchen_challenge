@@ -45,7 +45,7 @@ def generate_launch_description():
                 "params_file",
                 default_value=default_params_file,
             ),
-            DeclareLaunchArgument("tf_topic", default_value="/t2/tf"),
+            DeclareLaunchArgument("tf_topic", default_value="/t2/tf_filtered"),
             DeclareLaunchArgument(
                 "tf_static_topic",
                 default_value="/t2/tf_static",

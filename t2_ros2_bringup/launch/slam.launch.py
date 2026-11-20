@@ -15,11 +15,17 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration("use_sim_time")
     tf_topic = LaunchConfiguration("tf_topic")
+    filtered_tf_topic = LaunchConfiguration("filtered_tf_topic")
     tf_static_topic = LaunchConfiguration("tf_static_topic")
 
-    common_arguments = {
+    cartographer_arguments = {
         "use_sim_time": use_sim_time,
         "tf_topic": tf_topic,
+        "tf_static_topic": tf_static_topic,
+    }
+    rviz2_arguments = {
+        "use_sim_time": use_sim_time,
+        "tf_topic": filtered_tf_topic,
         "tf_static_topic": tf_static_topic,
     }
 
@@ -28,6 +34,10 @@ def generate_launch_description():
             DeclareLaunchArgument("use_sim_time", default_value="false"),
             DeclareLaunchArgument("tf_topic", default_value="/t2/tf"),
             DeclareLaunchArgument(
+                "filtered_tf_topic",
+                default_value="/t2/tf_filtered",
+            ),
+            DeclareLaunchArgument(
                 "tf_static_topic",
                 default_value="/t2/tf_static",
             ),
@@ -35,13 +45,13 @@ def generate_launch_description():
                 PythonLaunchDescriptionSource(
                     os.path.join(launch_directory, "cartographer.launch.py")
                 ),
-                launch_arguments=common_arguments.items(),
+                launch_arguments=cartographer_arguments.items(),
             ),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     os.path.join(launch_directory, "rviz2.launch.py")
                 ),
-                launch_arguments=common_arguments.items(),
+                launch_arguments=rviz2_arguments.items(),
             ),
         ]
     )

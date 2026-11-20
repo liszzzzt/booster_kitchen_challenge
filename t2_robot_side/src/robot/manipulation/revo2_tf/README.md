@@ -28,7 +28,7 @@ ros2 launch /ws/t2_robot_side/src/robot/manipulation/revo2_tf/revo2_tf.launch.py
 ros2 launch /ws/t2_robot_side/src/robot/manipulation/revo2_tf/revo2_tf.launch.py topics:=t2
 ```
 
-输入改为 `/t2/revo2/hand_state` + `/t2/joint_states`，输出改为 `/t2/tf` + `/t2/tf_static`（MoveIt、RViz、Nav2 用的就是这两个）。
+输入改为 `/t2/revo2/hand_state` + `/t2/joint_states`，动态坐标输出到 `/t2/tf`；固定坐标输出到 `/t2/tf_static`。
 compose 里的 `revo2_tf` 服务用环境变量切换：启动前设 `REVO2_TF_TOPICS=t2`（默认 `sim`）。
 Booster Studio 里保持默认 `sim`：手指坐标系先进仿真的 `/tf`，再由机器人端 TfRelay 复制到 `/t2/tf`；两种模式不要同时开，否则 `/t2/tf` 里每个手指坐标系会有两份。
 
