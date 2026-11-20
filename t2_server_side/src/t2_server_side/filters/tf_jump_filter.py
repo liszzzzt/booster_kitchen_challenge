@@ -16,11 +16,11 @@ MAX_YAW_JUMP = math.radians(90)
 
 class TfJumpFilterNode(Node):
     def __init__(self):
-        super().__init__("t2_tf_jump_filter")
+        super().__init__("t2_tf_filter")
 
         qos = QoSProfile(
             history=HistoryPolicy.KEEP_LAST,
-            depth=100,
+            depth=1,
             reliability=ReliabilityPolicy.RELIABLE,
             durability=DurabilityPolicy.VOLATILE,
         )

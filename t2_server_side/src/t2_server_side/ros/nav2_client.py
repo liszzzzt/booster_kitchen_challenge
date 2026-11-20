@@ -23,42 +23,46 @@ class T2Nav2Client(Node):
             "/spin",
         )
 
-    def spin(self, angle=2.0 * math.pi):
-        # initial 360 rotation, to stable localization
+    def spin(self, angle=math.pi / 2.0):
+        # Four 90-degree rotations for the initial localization scan.
         while rclpy.ok() and not self.spin_client.wait_for_server(timeout_sec=1.0):
             print("Waiting for Nav2 spin...")
 
         if not rclpy.ok():
             return False
 
-        goal = Spin.Goal()
-        goal.target_yaw = angle
-        goal.time_allowance.sec = 25
+        for spin_index in range(4):
+            goal = Spin.Goal()
+            goal.target_yaw = angle
+            goal.time_allowance.sec = 25
 
-        print(f"Nav2 spin: angle={angle:.2f}")
-        send_future = self.spin_client.send_goal_async(goal)
-        while rclpy.ok() and not send_future.done():
-            time.sleep(0.1)
+            print(f"Nav2 spin {spin_index + 1}/4: angle={angle:.2f}")
+            send_future = self.spin_client.send_goal_async(goal)
+            while rclpy.ok() and not send_future.done():
+                time.sleep(0.1)
 
-        goal_handle = send_future.result()
-        if not goal_handle.accepted:
-            print("Nav2 spin rejected")
-            return False
+            goal_handle = send_future.result()
+            if not goal_handle.accepted:
+                print(f"Nav2 spin {spin_index + 1}/4 rejected")
+                return False
 
-        result_future = goal_handle.get_result_async()
-        while rclpy.ok() and not result_future.done():
-            time.sleep(0.1)
+            result_future = goal_handle.get_result_async()
+            while rclpy.ok() and not result_future.done():
+                time.sleep(0.1)
 
-        if not rclpy.ok():
-            return False
+            if not rclpy.ok():
+                return False
 
-        result = result_future.result()
-        if result.status == GoalStatus.STATUS_SUCCEEDED:
-            print("Nav2 spin completed")
-            return True
+            result = result_future.result()
+            if result.status != GoalStatus.STATUS_SUCCEEDED:
+                print(
+                    f"Nav2 spin {spin_index + 1}/4 failed with status "
+                    f"{result.status}"
+                )
+                return False
 
-        print(f"Nav2 spin failed with status {result.status}")
-        return False
+        print("Nav2 spin completed")
+        return True
 
     def navigate_to(self, x, y, yaw):
         while rclpy.ok() and not self.client.wait_for_server(timeout_sec=1.0):
