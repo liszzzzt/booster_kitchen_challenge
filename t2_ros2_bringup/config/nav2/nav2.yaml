@@ -45,7 +45,7 @@ controller_server:
       min_lookahead_dist: 0.20
       max_lookahead_dist: 0.60
       lookahead_time: 1.5
-      rotate_to_heading_angular_vel: 0.90
+      rotate_to_heading_angular_vel: 0.70
       transform_tolerance: 0.30
       use_velocity_scaled_lookahead_dist: true
       min_approach_linear_velocity: 0.60
@@ -57,7 +57,7 @@ controller_server:
       cost_scaling_dist: 0.40
       cost_scaling_gain: 1.0
       inflation_cost_scaling_factor: 5.0
-      regulated_linear_scaling_min_radius: 0.90
+      regulated_linear_scaling_min_radius: 0.70
       regulated_linear_scaling_min_speed: 0.6
       use_rotate_to_heading: true
       allow_reversing: false
@@ -179,7 +179,7 @@ behavior_server:
 
     spin:
       plugin: "nav2_behaviors::Spin"
-      max_rotational_vel: 0.9
+      max_rotational_vel: 0.7
       min_rotational_vel: 0.6
       rotational_acc_lim: 3.2
       simulate_ahead_time: 2.0
