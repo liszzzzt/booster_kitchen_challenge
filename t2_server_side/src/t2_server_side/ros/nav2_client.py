@@ -24,55 +24,37 @@ class T2Nav2Client(Node):
         )
 
     def spin(self):
-        spin_angles = [
-            math.radians(90),
-            math.radians(90),
-            math.radians(90),
-            math.radians(90),
-            math.radians(60),
-        ]
-
         while rclpy.ok() and not self.spin_client.wait_for_server(timeout_sec=1.0):
             print("Waiting for Nav2 spin...")
 
         if not rclpy.ok():
             return False
 
-        for spin_index, angle in enumerate(spin_angles):
-            goal = Spin.Goal()
-            goal.target_yaw = angle
-            goal.time_allowance.sec = 25
+        goal = Spin.Goal()
+        goal.target_yaw = math.radians(360)
+        goal.time_allowance.sec = 25
 
-            print(
-                f"Nav2 spin {spin_index + 1}/5: "
-                f"angle={math.degrees(angle):.0f} degrees"
-            )
-            send_future = self.spin_client.send_goal_async(goal)
-            while rclpy.ok() and not send_future.done():
-                time.sleep(0.1)
+        print("Nav2 spin: angle=360 degrees")
+        send_future = self.spin_client.send_goal_async(goal)
+        while rclpy.ok() and not send_future.done():
+            time.sleep(0.1)
 
-            goal_handle = send_future.result()
-            if not goal_handle.accepted:
-                print(f"Nav2 spin {spin_index + 1}/5 rejected")
-                return False
+        goal_handle = send_future.result()
+        if not goal_handle.accepted:
+            print("Nav2 spin rejected")
+            return False
 
-            result_future = goal_handle.get_result_async()
-            while rclpy.ok() and not result_future.done():
-                time.sleep(0.1)
+        result_future = goal_handle.get_result_async()
+        while rclpy.ok() and not result_future.done():
+            time.sleep(0.1)
 
-            if not rclpy.ok():
-                return False
+        if not rclpy.ok():
+            return False
 
-            result = result_future.result()
-            if result.status != GoalStatus.STATUS_SUCCEEDED:
-                print(
-                    f"Nav2 spin {spin_index + 1}/5 failed with status "
-                    f"{result.status}"
-                )
-                return False
-
-            print(f"Nav2 spin {spin_index + 1}/5 completed")
-            time.sleep(2)
+        result = result_future.result()
+        if result.status != GoalStatus.STATUS_SUCCEEDED:
+            print(f"Nav2 spin failed with status {result.status}")
+            return False
 
         print("Nav2 spin completed")
         return True
