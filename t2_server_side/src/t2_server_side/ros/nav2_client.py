@@ -7,6 +7,8 @@ from geometry_msgs.msg import PoseStamped
 from nav2_msgs.action import NavigateToPose, Spin
 from rclpy.action import ActionClient
 from rclpy.node import Node
+from geometry_msgs.msg import TwistStamped
+from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 
 
 class T2Nav2Client(Node):
@@ -22,6 +24,32 @@ class T2Nav2Client(Node):
             Spin,
             "/spin",
         )
+
+        # nav2 debug
+        self.last_debug_time = 0.0
+        command_qos = QoSProfile(
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.VOLATILE,
+        )
+        self.command_subscription = self.create_subscription(
+            TwistStamped,
+            "cmd_vel",
+            self.command_callback,
+            command_qos,
+        )
+
+    def command_callback(self, msg):
+        current_time = time.monotonic()
+        if current_time - self.last_debug_time >= 0.5:
+            print(
+                "Nav2 cmd: "
+                f"forward={msg.twist.linear.x:.2f}, "
+                f"lateral={msg.twist.linear.y:.2f}, "
+                f"rotation={msg.twist.angular.z:.2f}"
+            )
+            self.last_debug_time = current_time
 
     def spin(self):
         while rclpy.ok() and not self.spin_client.wait_for_server(timeout_sec=1.0):
