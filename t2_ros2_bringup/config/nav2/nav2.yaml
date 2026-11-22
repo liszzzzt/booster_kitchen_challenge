@@ -58,7 +58,7 @@ controller_server:
       inflation_cost_scaling_factor: 5.0
       regulated_linear_scaling_min_radius: 0.70
       regulated_linear_scaling_min_speed: 0.6
-      use_rotate_to_heading: true
+      use_rotate_to_heading: false
       rotate_to_heading_min_angle: 1.57
       rotate_to_heading_angular_vel: 0.70
       allow_reversing: false
@@ -91,7 +91,7 @@ local_costmap:
           data_type: "PointCloud2"
           clearing: true
           marking: true
-          min_obstacle_height: 0.05
+          min_obstacle_height: -0.4
           max_obstacle_height: 0.8
           obstacle_min_range: 0.20
           obstacle_max_range: 4.0
@@ -136,7 +136,7 @@ global_costmap:
           data_type: "PointCloud2"
           clearing: true
           marking: true
-          min_obstacle_height: 0.05
+          min_obstacle_height: -0.4
           max_obstacle_height: 0.8
           obstacle_min_range: 0.20
           obstacle_max_range: 4.0
