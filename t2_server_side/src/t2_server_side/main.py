@@ -29,31 +29,42 @@ def main():
     tf_filter_thread.start()
 
     center_control = CenterControl(server_node, nav2_client)
-    remote_control = RemoteControl(server_node)
+    schedule_thread = None
+
+    def start_schedule():
+        nonlocal schedule_thread
+
+        if schedule_thread is not None and schedule_thread.is_alive():
+            print("Schedule is already running.")
+            return
+
+        if not server_node.check_door():
+            print("Door is closed. Schedule stopped.")
+            return
+
+        def run_schedule():
+            print("Door is open. Schedule started.")
+            center_control.execute_schedule()
+            print("Schedule finished. Remote control enabled.")
+
+        schedule_thread = threading.Thread(target=run_schedule, daemon=True)
+        schedule_thread.start()
+
+    remote_control = RemoteControl(server_node, start_schedule)
 
     try:
         if not server_node.wait_for_robot():
             print("Robot side is not available.")
             return
 
-        mode = input("1: schedule, 2: remote control: ")
+        mode = input("1: remote control, 2: schedule: ")
 
         if mode == "2":
-            remote_control.launch()
-            return
-
-        if mode != "1":
+            start_schedule()
+        elif mode != "1":
             print("Unknown mode.")
             return
 
-        if not server_node.check_door():
-            print("Door is closed. Schedule stopped. Remote control enabled.")
-            remote_control.launch()
-            return
-
-        print("Door is open. Server is ready.")
-        center_control.execute_schedule()
-        print("Schedule finished. Remote control enabled.")
         remote_control.launch()
     finally:
         tf_filter_executor.shutdown()

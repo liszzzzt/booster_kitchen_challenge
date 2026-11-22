@@ -25,8 +25,9 @@ def read_key(prompt=""):
 
 
 class RemoteControl:
-    def __init__(self, server_node):
+    def __init__(self, server_node, start_schedule):
         self.server_node = server_node
+        self.start_schedule = start_schedule
 
     def launch(self):
         LOCOMOTION_KEYS = {
@@ -39,6 +40,13 @@ class RemoteControl:
         command_id = 1
         while True:
             key = read_key()
+
+            # shift + 2: activate schedule
+            activate_schedule = key == "@"
+            if activate_schedule:
+                key = "="
+            # shift + 2: activate schedule
+
             msg = {
                 "id": command_id,
                 "target": "",
@@ -58,6 +66,8 @@ class RemoteControl:
             success = self.server_node.wait_for_success(command_id)
             if success:
                 print(f"Command {command_id} completed. Key: {key}")
+                if activate_schedule:
+                    self.start_schedule()
             else:
                 print(f"Command {command_id} failed. Key: {key}")
             command_id = command_id + 1
