@@ -4,9 +4,9 @@ import time
 class LocomotionRemoteControl():
     def __init__(self, client):
         self.client = client
-        self.linear_speed = 1.8 # 0.5
-        self.lateral_speed = 0.6
-        self.angular_speed = 0.8 # 1
+        self.linear_speed = 0.8 # 0.5
+        self.lateral_speed = 0.5
+        self.angular_speed = 0.4 # 1
         self.walk_duration = 2.0
         self.head_step = 0.1
 
