@@ -15,7 +15,6 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration("use_sim_time")
     tf_topic = LaunchConfiguration("tf_topic")
-    filtered_tf_topic = LaunchConfiguration("filtered_tf_topic")
     tf_static_topic = LaunchConfiguration("tf_static_topic")
 
     cartographer_arguments = {
@@ -25,7 +24,7 @@ def generate_launch_description():
     }
     rviz2_arguments = {
         "use_sim_time": use_sim_time,
-        "tf_topic": filtered_tf_topic,
+        "tf_topic": tf_topic,
         "tf_static_topic": tf_static_topic,
     }
 
@@ -33,10 +32,6 @@ def generate_launch_description():
         [
             DeclareLaunchArgument("use_sim_time", default_value="false"),
             DeclareLaunchArgument("tf_topic", default_value="/t2/tf"),
-            DeclareLaunchArgument(
-                "filtered_tf_topic",
-                default_value="/t2/tf_filtered",
-            ),
             DeclareLaunchArgument(
                 "tf_static_topic",
                 default_value="/t2/tf_static",

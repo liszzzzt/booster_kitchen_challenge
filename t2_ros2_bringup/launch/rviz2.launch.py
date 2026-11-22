@@ -23,7 +23,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument("use_sim_time", default_value="false"),
-            DeclareLaunchArgument("tf_topic", default_value="/t2/tf_filtered"),
+            DeclareLaunchArgument("tf_topic", default_value="/t2/tf"),
             DeclareLaunchArgument(
                 "tf_static_topic",
                 default_value="/t2/tf_static",

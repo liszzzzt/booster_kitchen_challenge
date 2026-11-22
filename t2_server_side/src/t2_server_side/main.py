@@ -2,7 +2,6 @@ import threading
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
 
-from t2_server_side.filters.tf_jump_filter import TfJumpFilterNode
 from t2_server_side.ros.nav2_client import T2Nav2Client
 from t2_server_side.ros.node import T2ServerNode
 from t2_server_side.high_level_planner.center_control import CenterControl
@@ -18,15 +17,6 @@ def main():
     executor.add_node(nav2_client)
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
-
-    tf_filter_node = TfJumpFilterNode()
-    tf_filter_executor = SingleThreadedExecutor()
-    tf_filter_executor.add_node(tf_filter_node)
-    tf_filter_thread = threading.Thread(
-        target=tf_filter_executor.spin,
-        daemon=True,
-    )
-    tf_filter_thread.start()
 
     center_control = CenterControl(server_node, nav2_client)
     schedule_thread = None
@@ -67,9 +57,6 @@ def main():
 
         remote_control.launch()
     finally:
-        tf_filter_executor.shutdown()
-        tf_filter_thread.join()
-        tf_filter_node.destroy_node()
         executor.shutdown()
         executor_thread.join()
         server_node.destroy_node()
