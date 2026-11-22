@@ -45,7 +45,6 @@ controller_server:
       min_lookahead_dist: 0.20
       max_lookahead_dist: 0.60
       lookahead_time: 1.5
-      rotate_to_heading_angular_vel: 0.70
       transform_tolerance: 0.30
       use_velocity_scaled_lookahead_dist: true
       min_approach_linear_velocity: 0.60
@@ -59,9 +58,10 @@ controller_server:
       inflation_cost_scaling_factor: 5.0
       regulated_linear_scaling_min_radius: 0.70
       regulated_linear_scaling_min_speed: 0.6
-      use_rotate_to_heading: true
+      use_rotate_to_heading: false
+      rotate_to_heading_min_angle: 1.57
+      rotate_to_heading_angular_vel: 0.70
       allow_reversing: false
-      rotate_to_heading_min_angle: 0.785
       max_angular_accel: 8.0
       max_robot_pose_search_dist: 10.0
       stateful: true
@@ -92,7 +92,7 @@ local_costmap:
           clearing: true
           marking: true
           min_obstacle_height: 0.05
-          max_obstacle_height: 2.0
+          max_obstacle_height: 1.50
           obstacle_min_range: 0.20
           obstacle_max_range: 4.0
           raytrace_min_range: 0.20
@@ -137,7 +137,7 @@ global_costmap:
           clearing: true
           marking: true
           min_obstacle_height: 0.05
-          max_obstacle_height: 2.0
+          max_obstacle_height: 1.50
           obstacle_min_range: 0.20
           obstacle_max_range: 4.0
           raytrace_min_range: 0.20
