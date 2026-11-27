@@ -274,4 +274,16 @@
     <child link="left_thumb_touch_link" />
     <axis xyz="0 0 0" />
   </joint>
+  <link name="left_power_grasp_link" />
+  <joint name="left_power_grasp_joint" type="fixed">
+    <origin xyz="0 0.125 -0.044" rpy="3.14159 -0 3.14159" />
+    <parent link="left_wrist_roll_link" />
+    <child link="left_power_grasp_link" />
+  </joint>
+  <link name="left_pinch_grasp_link" />
+  <joint name="left_pinch_grasp_joint" type="fixed">
+    <origin xyz="0.0238 0.1464 -0.0479" rpy="0 -1.5708 -1.5708" />
+    <parent link="left_wrist_roll_link" />
+    <child link="left_pinch_grasp_link" />
+  </joint>
 </robot>
