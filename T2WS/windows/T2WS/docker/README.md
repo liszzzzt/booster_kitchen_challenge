@@ -28,21 +28,16 @@ run:
 
     docker compose up -d --force-recreate
 
-## Revo2 finger TF (`revo2_tf` service)
+## Revo2 finger TF (`revo2_tf`, inside `t2ws`)
 
-`docker compose up -d` also starts `revo2_tf` (container `t2ws-revo2-tf`). It publishes the Revo2
-finger frames (`<side>_base_link`, finger links, `*_tip_link`, `*_touch_link`) under
-`<side>_wrist_roll_link` in `/tf` and `/tf_static`, from the sim plugin's `/revo2/hand_state`.
-See `t2_robot_side/src/robot/manipulation/revo2_tf/README.md`.
+The `t2ws` container starts `revo2_tf.launch.py` in the background (see `command` in `compose.yaml`).
+It publishes the Revo2 finger frames (`<side>_base_link`, finger links, `*_tip_link`, `*_touch_link`,
+grasp frames) under `<side>_wrist_roll_link` in `/t2/tf` and `/t2/tf_static`, from the finger joints
+that the T2 agent appends to `/t2/joint_states`. Same in Booster Studio and on the real robot; the
+agent must run. See `t2_robot_side/src/robot/manipulation/revo2_tf/README.md`.
 
-    docker compose ps                  # t2ws-dev and t2ws-revo2-tf running
-    docker compose logs -f revo2_tf    # "Robot initialized" x2, "receiving hand state"
-    docker compose up -d t2ws          # dev container only
-    docker compose stop revo2_tf       # stop it (do this before running the launch by hand)
-
-On the real robot T2WS only sees the robot-side relays (`/t2/...`); start it with
-`REVO2_TF_TOPICS=t2` so it reads `/t2/revo2/hand_state` and publishes `/t2/tf`, `/t2/tf_static`
-(default `sim` = Booster Studio).
+    docker compose logs -f t2ws        # launch output: "Robot initialized" x2
+    docker compose restart t2ws        # the launch is not restarted if it dies; this restarts it
 
 Nothing in the Booster Studio container is modified. DDS uses UDP over the
 shared network namespace according to `fastdds_profiles.xml`.

@@ -3,6 +3,8 @@ import threading
 from boosteros.robots.booster import BoosterRobot
 from .locomotion.control import LocomotionControl
 from .manipulation.control import ManipulationControl
+from .relay_bridges.arm_jog import ArmJogRelay
+from .relay_bridges.handeye_calib import HandEyeCalibRelay
 from .relay_bridges.imu import ImuRelay
 from .relay_bridges.joint_states import JointStatesRelay
 from .relay_bridges.odometry import OdometryRelay
@@ -29,8 +31,13 @@ class T2Robot:
         self.odometry_relay = OdometryRelay(relay_node)
         self.joint_states_relay = JointStatesRelay(relay_node)
         self.revo2_relay = Revo2Relay(relay_node, self.client)
+        self.handeye_calib_relay = HandEyeCalibRelay(relay_node, self.client)
+        self.arm_jog_relay = ArmJogRelay(relay_node, self.client)
 
     def locomotion(self, msg, source="schedule"):
+        # legs locked for pick-and-place (manip_start .. manip_release): walking would drop what is held
+        if self.manipulation_control.holding_arms():
+            return False
         with self.motion_state_lock:
             # manipulation is running, abort locomotion
             if self.motion_state == "manipulation":

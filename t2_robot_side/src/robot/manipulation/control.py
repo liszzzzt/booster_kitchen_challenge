@@ -3,12 +3,17 @@ import time
 
 from boosteros.types import JointCommand
 from .moveit2_control import MoveIt2Control
+from .pick_place import PickPlace
+
+# lock legs -> pick / place -> release, see pick_place.py (server: t2_server_side/manipulation/manager.py)
+PICK_PLACE_TYPES = ("manip_start", "pick", "place", "manip_release")
 
 
 class ManipulationControl():
     def __init__(self, client):
         self.client = client
         self.moveit2_control = MoveIt2Control(client)
+        self.pick_place = PickPlace(client)
 
     def execute(self, msg):
         command = msg if isinstance(msg, dict) else json.loads(msg.data)
@@ -16,6 +21,9 @@ class ManipulationControl():
 
         if command_type == "moveit2":
             return self.moveit2_control.execute(command)
+
+        if command_type in PICK_PLACE_TYPES:
+            return self.pick_place.execute(command)
 
         if command_type == "finger":
             return False
@@ -25,6 +33,12 @@ class ManipulationControl():
 
     def stop(self):
         self.moveit2_control.stop()
+        if self.pick_place.active:          # agent closing: hand the legs back to Booster
+            self.pick_place.arm.stop()
+
+    def holding_arms(self):
+        """True while the legs are locked for pick-and-place (T2Robot refuses walking meanwhile)."""
+        return self.pick_place.active
 
     def execute_schedule(self):
         self.moveit2_control.stop()
